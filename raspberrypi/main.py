@@ -1,9 +1,9 @@
-from datetime import datetime
+from math import sqrt
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 
 iot_thing = "raspberrypi"
 iot_endpoint = "a2f51vytpcqhsx-ats.iot.us-east-1.amazonaws.com"
-certs_path = "/home/pi/IoTumble/raspberrypi/certs/"
+certs_path = "certs/"
 cert_auth = certs_path + "root-ca.pem"
 pvt_key = certs_path + "private.pem.key"
 cert = certs_path + "certificate.pem.crt"
@@ -17,8 +17,12 @@ myMQTTClient.configureConnectDisconnectTimeout(10)  # 10 sec
 myMQTTClient.configureMQTTOperationTimeout(5)  # 5 sec
 myMQTTClient.connect()
 
-timestamp = datetime.utcnow().strftime("%d-%m-%Y %H:%M:%S")
-message = "Testing MQTT message publishing!"
-payload = "{\"device\":\"" + iot_thing + "\",\"message\":\"" + message + \
-          "\",\"timestamp\":\"" + timestamp + "\"}"
-myMQTTClient.publish(iot_thing, payload, 1)
+x = -4.887451171881
+y = -7.242191473517
+z = 3.438523905867
+svm = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))
+
+topic = iot_thing + "/accelerometer/data"
+payload = "{\"x\":\"" + str(x) + "\",\"y\":\"" + str(y) + "\",\"z\":\"" \
+          + str(z) + "\",\"svm\":\"" + str(svm) + "\"}"
+myMQTTClient.publish(topic, payload, 1)
