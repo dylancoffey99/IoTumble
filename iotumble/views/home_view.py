@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import font, ttk
 
 from PIL import Image, ImageTk
 
@@ -11,7 +11,7 @@ class HomeView(AbstractView, tk.Tk):
         super().__init__()
         self.home_controller = controller
         self.frames = [tk.Frame(), tk.Frame(), tk.Frame(), tk.Frame(), tk.Frame()]
-        self.header_logo = None
+        self.header_logo = ImageTk.PhotoImage(Image.open("logo.png"))
 
     def load_root(self):
         self.title("IoTumble")
@@ -37,10 +37,15 @@ class HomeView(AbstractView, tk.Tk):
         self.frames[4].pack(expand=True, fill="both", side="right", ipady=150)
 
     def load_header(self):
-        self.header_logo = ImageTk.PhotoImage(Image.open("logo.png"))
         header_logo_label = ttk.Label(self.frames[0], image=self.header_logo,
                                       background=self.primary_bg)
-        header_logo_label.pack(padx=48, fill="both", side="left")
+        header_logo_label.pack(fill="both", side="left", padx=47)
+        header_button_font = font.Font(family=self.font, size=16, weight="bold")
+        header_exit_button = tk.Button(self.frames[0], text="Exit", font=header_button_font,
+                                       background=self.primary_bg, activebackground=self.primary_fg,
+                                       foreground=self.primary_fg, activeforeground=self.primary_bg,
+                                       borderwidth=0, command=self.close)
+        header_exit_button.pack(fill="both", side="left", ipadx=40)
 
     def start(self):
         self.load_root()
