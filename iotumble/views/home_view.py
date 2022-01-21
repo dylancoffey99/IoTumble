@@ -33,7 +33,10 @@ class HomeView(AbstractView, tk.Tk):
                 }},
             "TLabel": {
                 "configure": {
-                    "background": self.primary_bg
+                    "background": self.primary_bg,
+                    "foreground": self.primary_fg,
+                    "font": (self.font, 12, "bold"),
+                    "padding": 10
                 }},
             "TScrollbar": {
                 "configure": {
@@ -42,7 +45,7 @@ class HomeView(AbstractView, tk.Tk):
                 }, "map": {
                     "background": [("active", self.tertiary_bg)]
                 }},
-            "Treeview": {
+            "incidents.Treeview": {
                 "configure": {
                     "background": self.primary_bg, "borderwidth": 0,
                     "fieldbackground": self.secondary_bg, "font": (self.font, 12),
@@ -50,6 +53,17 @@ class HomeView(AbstractView, tk.Tk):
                 }, "map": {
                     "background": [("selected", self.primary_fg)],
                     "foreground": [("selected", self.secondary_bg)]
+                }},
+            "details.Treeview": {
+                "configure": {
+                    "background": self.primary_bg, "borderwidth": 0,
+                    "fieldbackground": self.secondary_bg, "font": (self.font, 10),
+                    "foreground": self.primary_fg, "rowheight": 25
+                }},
+            "details.Treeview.Heading": {
+                "configure": {
+                    "background": self.tertiary_bg, "font": (self.font, 10),
+                    "foreground": self.primary_fg
                 }}})
         style.theme_use("iotumble")
         style.layout("Treeview.Item", [("Treeitem.padding", {
@@ -70,20 +84,21 @@ class HomeView(AbstractView, tk.Tk):
         self.frames[1].pack(expand=True, fill="both", side="left", ipady=150)
         self.frames[2] = tk.Frame(self, background=self.secondary_bg)
         self.frames[2].pack(expand=True, fill="both", side="top", ipadx=650)
-        self.frames[3] = tk.Frame(self, background=self.secondary_bg)
-        self.frames[3].pack(expand=True, fill="both", side="left", ipady=150)
-        self.frames[4] = tk.Frame(self, background=self.secondary_bg)
-        self.frames[4].pack(expand=True, fill="both", side="right", ipady=150)
+        self.frames[3] = tk.Frame(self, background=self.primary_bg)
+        self.frames[3].pack(expand=True, fill="both", side="left")
+        self.frames[4] = tk.Frame(self, background=self.primary_bg)
+        self.frames[4].pack(expand=True, fill="both", side="right", ipadx=70)
 
     def load_header(self):
         header_logo_label = ttk.Label(self.frames[0], image=self.header_logo)
-        header_logo_label.pack(fill="both", side="left", padx=47)
+        header_logo_label.pack(fill="both", side="left", padx=30)
         header_exit_button = ttk.Button(self.frames[0], text="Exit", takefocus=False,
                                         command=self.close)
         header_exit_button.pack(fill="both", side="left", ipadx=40)
 
     def load_incidents(self):
-        incidents_tree_view = ttk.Treeview(self.frames[1], show="tree", selectmode="browse")
+        incidents_tree_view = ttk.Treeview(self.frames[1], show="tree", selectmode="browse",
+                                           style="incidents.Treeview")
         incidents_tree_view.pack(expand=True, fill="both", side="left")
         incidents_scrollbar = ttk.Scrollbar(self.frames[1], orient="vertical",
                                             command=incidents_tree_view.yview)
@@ -92,12 +107,30 @@ class HomeView(AbstractView, tk.Tk):
         incidents_tree_view.tag_configure("0", background=self.primary_bg)
         incidents_tree_view.tag_configure("1", background=self.secondary_bg)
 
+    def load_details(self):
+        details_label = ttk.Label(self.frames[3], text="Incident Details")
+        details_label.pack()
+        details_columns = ["Timestamp", "X-Acceleration", "Y-Acceleration", "Z-Acceleration"]
+        details_tree_view = ttk.Treeview(self.frames[3], columns=details_columns, show="headings",
+                                         selectmode="none", style="details.Treeview")
+        details_tree_view.pack(expand=True, fill="both", side="left")
+        details_scrollbar = ttk.Scrollbar(self.frames[3], orient="vertical",
+                                          command=details_tree_view.yview)
+        details_scrollbar.pack(fill="both", side="right")
+        details_tree_view.configure(yscrollcommand=details_scrollbar.set)
+        details_tree_view.tag_configure("0", background=self.primary_bg)
+        details_tree_view.tag_configure("1", background=self.secondary_bg)
+        for column in details_columns:
+            details_tree_view.column(column, anchor="center", width=1)
+            details_tree_view.heading(column, text=column)
+
     def start(self):
         self.load_root()
         self.load_style()
         self.load_frames()
         self.load_header()
         self.load_incidents()
+        self.load_details()
         self.mainloop()
 
     def close(self):
