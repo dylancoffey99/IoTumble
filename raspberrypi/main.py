@@ -1,28 +1,37 @@
+from configparser import ConfigParser
 from math import sqrt
+
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 
-iot_thing = "raspberrypi"
-iot_endpoint = "a2f51vytpcqhsx-ats.iot.us-east-1.amazonaws.com"
-certs_path = "certs/"
-cert_auth = certs_path + "root-ca.pem"
-pvt_key = certs_path + "private.pem.key"
-cert = certs_path + "certificate.pem.crt"
 
-myMQTTClient = AWSIoTMQTTClient(iot_thing)
-myMQTTClient.configureEndpoint(iot_endpoint, 8883)
-myMQTTClient.configureCredentials(cert_auth, pvt_key, cert)
-myMQTTClient.configureOfflinePublishQueueing(-1)  # Infinite offline Publish queueing
-myMQTTClient.configureDrainingFrequency(2)  # Draining: 2 Hz
-myMQTTClient.configureConnectDisconnectTimeout(10)  # 10 sec
-myMQTTClient.configureMQTTOperationTimeout(5)  # 5 sec
-myMQTTClient.connect()
+class Main:
+    def __init__(self, pi_config):
+        self.pi_config = pi_config
+        self.mqtt_client = AWSIoTMQTTClient(pi_config.get("config", "iot_thing"))
 
-x = -4.887451171881
-y = -7.242191473517
-z = 3.438523905867
-svm = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2))
+    def mqtt_connect(self):
+        self.mqtt_client.configureEndpoint(self.pi_config.get("config", "iot_endpoint"), 8883)
+        self.mqtt_client.configureCredentials(self.pi_config.get("dir", "root_ca"),
+                                              self.pi_config.get("dir", "private_key"),
+                                              self.pi_config.get("dir", "certificate"))
+        self.mqtt_client.configureOfflinePublishQueueing(-1)
+        self.mqtt_client.configureDrainingFrequency(2)
+        self.mqtt_client.configureConnectDisconnectTimeout(10)
+        self.mqtt_client.configureMQTTOperationTimeout(5)
+        self.mqtt_client.connect()
 
-topic = iot_thing + "/accelerometer/data"
-payload = "{\"x\":\"" + str(x) + "\",\"y\":\"" + str(y) + "\",\"z\":\"" \
-          + str(z) + "\",\"svm\":\"" + str(svm) + "\"}"
-myMQTTClient.publish(topic, payload, 1)
+    def mqtt_publish(self, incident_id, x, y, z):
+        topic = "iotumble/incidents/" + str(incident_id) + "/data"
+        svm = sqrt((x * x) + (y * y) + (z * z))
+        payload = "{\"x\":\"" + str(x) + "\",\"y\":\"" + str(y) + "\",\"z\":\"" \
+                  + str(z) + "\",\"svm\":\"" + str(svm) + "\"}"
+        self.mqtt_client.publish(topic, payload, 1)
+
+
+if __name__ == "__main__":
+    config = ConfigParser()
+    config.read("config.ini")
+
+    main = Main(config)
+    main.mqtt_connect()
+    main.mqtt_publish(1, -4.887451171881, -7.242191473517, 3.438523905867)
