@@ -5,15 +5,14 @@ from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 
 
 class Main:
-    def __init__(self, pi_config):
-        self.pi_config = pi_config
-        self.mqtt_client = AWSIoTMQTTClient(pi_config.get("config", "iot_thing"))
+    def __init__(self):
+        self.mqtt_client = AWSIoTMQTTClient(config.get("config", "iot_thing"))
 
     def mqtt_connect(self):
-        self.mqtt_client.configureEndpoint(self.pi_config.get("config", "iot_endpoint"), 8883)
-        self.mqtt_client.configureCredentials(self.pi_config.get("dir", "root_ca"),
-                                              self.pi_config.get("dir", "private_key"),
-                                              self.pi_config.get("dir", "certificate"))
+        self.mqtt_client.configureEndpoint(config.get("config", "iot_endpoint"), 8883)
+        self.mqtt_client.configureCredentials(config.get("dir", "root_ca"),
+                                              config.get("dir", "private_key"),
+                                              config.get("dir", "certificate"))
         self.mqtt_client.configureOfflinePublishQueueing(-1)
         self.mqtt_client.configureDrainingFrequency(2)
         self.mqtt_client.configureConnectDisconnectTimeout(10)
@@ -32,6 +31,6 @@ if __name__ == "__main__":
     config = ConfigParser()
     config.read("config.ini")
 
-    main = Main(config)
+    main = Main()
     main.mqtt_connect()
     main.mqtt_publish(1, -4.887451171881, -7.242191473517, 3.438523905867)
