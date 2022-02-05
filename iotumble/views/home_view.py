@@ -2,8 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 
 from PIL import Image, ImageTk
-from matplotlib import pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from iotumble.views.abstract_view import AbstractView
 
@@ -11,29 +9,37 @@ from iotumble.views.abstract_view import AbstractView
 class HomeView(AbstractView, tk.Tk):
     def __init__(self, controller):
         super().__init__()
-        self.home_controller = controller
-        self.frames = [tk.Frame(), tk.Frame(), tk.Frame(), tk.Frame(), tk.Frame(), tk.Frame()]
+        self.withdraw()
+        self.controller = controller
+        self.icon = tk.Toplevel()
+        self.border = tk.Frame()
+        self.incidents_tree_view = ttk.Treeview()
         self.header_logo = ImageTk.PhotoImage(Image.open("logo.png"))
-        self.tree_views = [ttk.Treeview(), ttk.Treeview()]
-        self.details_columns = ["Timestamp", "X-Acceleration", "Y-Acceleration", "Z-Acceleration",
-                                "SVM"]
 
     def load_root(self):
-        self.title("IoTumble")
-        self.geometry("1600x900")
-        self.iconbitmap("logo.ico")
-        self.resizable(width=False, height=False)
+        self.overrideredirect(True)
+        self.set_geometry(self, 600, 600)
+        self.configure(background=self.primary_bg)
+        self.border = tk.Frame(self, background=self.primary_bg, relief="solid", borderwidth=1)
+        self.border.pack(expand=True, fill="both")
+
+    def load_icon(self):
+        self.icon.attributes("-alpha", 0.0)
+        self.icon.title("IoTumble")
+        self.icon.iconbitmap("logo.ico")
+        self.icon.configure(background=self.secondary_bg)
+        self.icon.protocol("WM_DELETE_WINDOW", self.close)
 
     def load_style(self):
         style = ttk.Style()
         style.theme_create("iotumble", parent="default", settings={
-            "actions.TButton": {
+            "TButton": {
                 "configure": {
                     "anchor": "center", "background": self.primary_bg, "borderwidth": 0,
                     "font": (self.font, 12, "bold"), "foreground": self.primary_fg
                 }, "map": {
-                    "background": [("active", self.primary_fg)],
-                    "foreground": [("active", self.secondary_bg)]
+                    "background": [("pressed", self.primary_fg)],
+                    "foreground": [("pressed", self.secondary_bg)]
                 }},
             "header.TButton": {
                 "configure": {
@@ -47,44 +53,53 @@ class HomeView(AbstractView, tk.Tk):
                 "configure": {
                     "arrowcolor": self.primary_fg, "background": self.tertiary_bg,
                     "borderwidth": 0, "fieldbackground": self.primary_bg,
-                    "foreground": self.primary_fg, "relief": "flat",
-                    "selectbackground": self.primary_bg, "selectforeground": self.primary_fg
+                    "foreground": self.primary_fg, "padding": 2, "relief": "flat",
+                    "selectbackground": self.primary_bg, "selectforeground": self.primary_fg,
+                }},
+            "TEntry": {
+                "configure": {
+                    "borderwidth": 0, "fieldbackground": self.primary_bg,
+                    "foreground": self.primary_fg, "insertcolor": self.primary_fg,
+                    "padding": 2, "relief": "flat", "selectbackground": self.primary_fg,
+                    "selectforeground": self.secondary_bg
                 }},
             "primary.TLabel": {
                 "configure": {
-                    "anchor": "center",
-                    "background": self.primary_bg,
-                    "foreground": self.primary_fg,
-                    "font": (self.font, 12, "bold"),
+                    "anchor": "center", "background": self.primary_bg,
+                    "font": (self.font, 12, "bold"), "foreground": self.primary_fg,
                     "padding": 10
                 }},
             "secondary.TLabel": {
                 "configure": {
-                    "background": self.secondary_bg,
-                    "foreground": self.primary_fg,
-                    "font": (self.font, 12, "bold")
+                    "background": self.secondary_bg, "font": (self.font, 12, "bold"),
+                    "foreground": self.primary_fg, "padding": 20
+                }},
+            "tertiary.TLabel": {
+                "configure": {
+                    "anchor": "center", "background": self.tertiary_bg,
+                    "font": (self.font, 11, "bold"), "foreground": self.primary_fg
                 }},
             "TScrollbar": {
                 "configure": {
-                    "background": self.tertiary_bg, "borderwidth": 0,
-                    "troughcolor": self.secondary_bg
+                    "background": self.primary_fg, "borderwidth": 0,
+                    "troughcolor": self.tertiary_bg
                 }, "map": {
-                    "background": [("active", self.tertiary_bg)]
+                    "background": [("disabled", self.tertiary_bg)],
                 }},
             "incidents.Treeview": {
                 "configure": {
                     "background": self.primary_bg, "borderwidth": 0,
                     "fieldbackground": self.secondary_bg, "font": (self.font, 12),
-                    "foreground": self.primary_fg, "rowheight": 44
+                    "foreground": self.primary_fg, "rowheight": 46
                 }, "map": {
-                    "background": [("selected", self.primary_fg)],
-                    "foreground": [("selected", self.secondary_bg)]
+                    "background": [("selected", "black")],
+                    "foreground": [("selected", self.primary_fg)]
                 }},
             "details.Treeview": {
                 "configure": {
                     "background": self.primary_bg, "borderwidth": 0,
                     "fieldbackground": self.secondary_bg, "font": (self.font, 10),
-                    "foreground": self.primary_fg, "rowheight": 24
+                    "foreground": self.primary_fg, "rowheight": 26
                 }},
             "details.Treeview.Heading": {
                 "configure": {
@@ -104,102 +119,79 @@ class HomeView(AbstractView, tk.Tk):
             })]})])
         self.option_add("*TCombobox*Listbox*Background", self.secondary_bg)
         self.option_add("*TCombobox*Listbox*BorderWidth", 0)
+        self.option_add("*TCombobox*Listbox*Font", (self.font, 12))
         self.option_add("*TCombobox*Listbox*Foreground", self.primary_fg)
-        self.option_add("*TCombobox*Listbox*Font", (self.font, 12, "bold"))
         self.tk.eval("ttk::style configure ComboboxPopdownFrame -relief solid")
 
-    def load_frames(self):
-        self.frames[0] = tk.Frame(self, background=self.primary_bg)
-        self.frames[0].pack(expand=True, fill="both", side="top", ipady=20)
-        self.frames[1] = tk.Frame(self, background=self.secondary_bg)
-        self.frames[1].pack(expand=True, fill="both", side="left")
-        self.frames[2] = tk.Frame(self, background=self.secondary_bg)
-        self.frames[2].pack(expand=True, fill="both", side="top", ipadx=324)
-        self.frames[3] = tk.Frame(self, background=self.primary_bg)
-        self.frames[3].pack(expand=True, fill="both", side="left")
-        self.frames[4] = tk.Frame(self, background=self.secondary_bg)
-        self.frames[4].pack(expand=True, fill="both", side="top", ipadx=60)
-        self.frames[5] = tk.Frame(self, background=self.secondary_bg)
-        self.frames[5].pack(expand=True, fill="both", side="bottom")
-
     def load_header(self):
-        header_logo_label = ttk.Label(self.frames[0], style="primary.TLabel",
-                                      image=self.header_logo)
-        header_logo_label.pack(fill="both", side="left", padx=44)
-        header_refresh_button = ttk.Button(self.frames[0], takefocus=False, text="Refresh",
-                                           style="header.TButton")
-        header_refresh_button.pack(fill="both", side="left", ipadx=40)
-        header_options_button = ttk.Button(self.frames[0], takefocus=False, text="Options",
-                                           style="header.TButton")
-        header_options_button.pack(fill="both", side="left", ipadx=40)
-        header_exit_button = ttk.Button(self.frames[0], takefocus=False, text="Exit",
-                                        style="header.TButton", command=self.close)
-        header_exit_button.pack(fill="both", side="left", ipadx=40)
+        header_logo_label = ttk.Label(self.border, style="primary.TLabel", image=self.header_logo)
+        header_logo_label.pack(expand=True, fill="both", side="top", ipady=24)
+        header_logo_label.bind("<ButtonPress-1>", lambda e: self.pressed_window(self, True, e))
+        header_logo_label.bind("<ButtonRelease-1>", lambda e: self.pressed_window(self, False, e))
+        header_logo_label.bind("<B1-Motion>", lambda e: self.move_window(self, e))
 
     def load_incidents(self):
-        self.tree_views[0] = ttk.Treeview(self.frames[1], show="tree", selectmode="browse",
-                                          style="incidents.Treeview")
-        self.tree_views[0].pack(expand=True, fill="both", side="left")
-        incidents_scrollbar = ttk.Scrollbar(self.frames[1], orient="vertical",
-                                            command=self.tree_views[0].yview)
+        incidents_frame = tk.Frame(self.border, background=self.secondary_bg)
+        incidents_frame.pack(expand=True, fill="both", side="left")
+        incidents_label = ttk.Label(incidents_frame, style="tertiary.TLabel", text="Incidents")
+        incidents_label.pack(fill="both")
+        self.incidents_tree_view = ttk.Treeview(incidents_frame, show="tree", selectmode="browse",
+                                                style="incidents.Treeview")
+        self.incidents_tree_view.pack(expand=True, fill="both", side="left")
+        incidents_scrollbar = ttk.Scrollbar(incidents_frame, orient="vertical",
+                                            command=self.incidents_tree_view.yview)
         incidents_scrollbar.pack(fill="both", side="right")
-        self.tree_views[0].configure(yscrollcommand=incidents_scrollbar.set)
-        self.tree_views[0].tag_configure("0", background=self.secondary_bg)
-        self.tree_views[0].tag_configure("1", background=self.primary_bg)
+        self.incidents_tree_view.configure(yscrollcommand=incidents_scrollbar.set)
+        self.incidents_tree_view.tag_configure("0", background=self.secondary_bg)
+        self.incidents_tree_view.tag_configure("1", background=self.primary_bg)
 
-    def load_details(self):
-        details_label = ttk.Label(self.frames[3], style="primary.TLabel", text="Incident Details")
-        details_label.pack()
-        self.tree_views[1] = ttk.Treeview(self.frames[3], columns=self.details_columns,
-                                          show="headings", selectmode="none",
-                                          style="details.Treeview")
-        self.tree_views[1].pack(expand=True, fill="both", side="left")
-        details_scrollbar = ttk.Scrollbar(self.frames[3], orient="vertical",
-                                          command=self.tree_views[1].yview)
-        details_scrollbar.pack(fill="both", side="right")
-        self.tree_views[1].configure(yscrollcommand=details_scrollbar.set)
-        self.tree_views[1].tag_configure("0", background=self.secondary_bg)
-        self.tree_views[1].tag_configure("1", background=self.primary_bg)
-        for column in self.details_columns:
-            self.tree_views[1].column(column, anchor="center", width=1)
-            self.tree_views[1].heading(column, text=column)
+    def load_session(self):
+        session_frame = tk.Frame(self.border, background=self.secondary_bg)
+        session_frame.pack(expand=True, fill="both", side="top", ipadx=47)
+        session_label = ttk.Label(session_frame, style="tertiary.TLabel", text="Session")
+        session_label.pack(fill="both")
+        session_access_label = ttk.Label(session_frame, style="secondary.TLabel",
+                                         text="Access Key ID")
+        session_access_label.pack(expand=True, pady=(18, 0))
+        session_access_entry = ttk.Entry(session_frame, font=(self.font, 12))
+        session_access_entry.pack()
+        session_secret_label = ttk.Label(session_frame, style="secondary.TLabel",
+                                         text="Secret Access Key")
+        session_secret_label.pack(expand=True)
+        session_secret_entry = ttk.Entry(session_frame, font=(self.font, 12))
+        session_secret_entry.pack()
+        session_region_label = ttk.Label(session_frame, style="secondary.TLabel",
+                                         text="Region Name")
+        session_region_label.pack(expand=True)
+        session_region_combobox = ttk.Combobox(session_frame, state="readonly",
+                                               font=(self.font, 12),
+                                               values=["us-east-1", "us-east-2",
+                                                       "us-west-1", "us-west-2"])
+        session_region_combobox.pack()
 
-    def load_graph(self):
-        graph_figure = plt.figure(facecolor=self.secondary_bg)
-        graph_canvas = FigureCanvasTkAgg(graph_figure, master=self.frames[2]).get_tk_widget()
-        graph_canvas.pack(fill="both")
+    def load_buttons(self):
+        buttons_frame = tk.Frame(self.border, background=self.secondary_bg)
+        buttons_frame.pack(expand=True, fill="both", side="bottom")
+        connect_button = ttk.Button(buttons_frame, takefocus=False, style="login.TButton",
+                                    text="Connect", command=self.controller.view)
+        connect_button.pack(expand=True, fill="both", side="left", padx=(0, 5), pady=(46, 0))
+        quit_button = ttk.Button(buttons_frame, takefocus=False, text="Quit", command=self.close)
+        quit_button.pack(expand=True, fill="both", side="left", pady=(46, 0), ipadx=18)
 
-    def load_actions(self):
-        actions_label = ttk.Label(self.frames[4], style="primary.TLabel", text="Incident Actions")
-        actions_label.pack(fill="both", side="top")
-        actions_graph_label = ttk.Label(self.frames[4], style="secondary.TLabel",
-                                        text="Incident Graph")
-        actions_graph_label.pack(expand=True, side="left")
-        actions_graph_combobox = ttk.Combobox(self.frames[4], state="readonly", width=30,
-                                              font=(self.font, 12, "bold"),
-                                              values=["All Acceleration", "X-Acceleration",
-                                                      "Y-Acceleration", "Z-Acceleration",
-                                                      "Signal Vector Magnitude (SVM)"])
-        actions_graph_combobox.pack(expand=True, side="left")
-        actions_export_graph_button = ttk.Button(self.frames[5], takefocus=False,
-                                                 style="actions.TButton", text="Export Graph")
-        actions_export_graph_button.pack(expand=True, fill="both", side="left")
-        actions_export_details_button = ttk.Button(self.frames[5], takefocus=False,
-                                                   style="actions.TButton", text="Export Details")
-        actions_export_details_button.pack(expand=True, fill="both", side="left", padx=5)
-        actions_delete_button = ttk.Button(self.frames[5], takefocus=False,
-                                           style="actions.TButton", text="Delete Incident")
-        actions_delete_button.pack(expand=True, fill="both", side="left")
+    def hide(self):
+        self.icon.unbind("<Map>")
+        self.icon.unbind("<Unmap>")
+        self.withdraw()
 
     def start(self):
         self.load_root()
+        self.load_icon()
         self.load_style()
-        self.load_frames()
         self.load_header()
         self.load_incidents()
-        self.load_details()
-        self.load_graph()
-        self.load_actions()
+        self.load_session()
+        self.load_buttons()
+        self.open(self)
         self.mainloop()
 
     def close(self):
