@@ -19,11 +19,22 @@ class Main:
         self.mqtt_client.configureMQTTOperationTimeout(5)
         self.mqtt_client.connect()
 
-    def mqtt_publish(self, incident_id, x, y, z):
-        topic = "iotumble/incidents/" + str(incident_id) + "/data"
-        svm = sqrt((x * x) + (y * y) + (z * z))
-        payload = "{\"x\":\"" + str(x) + "\",\"y\":\"" + str(y) + "\",\"z\":\"" \
-                  + str(z) + "\",\"svm\":\"" + str(svm) + "\"}"
+    def mqtt_publish(self, incident_id, incident_data):
+        topic = "iotumble/incident/" + str(incident_id)
+        payload = "{"
+        for i, data in enumerate(incident_data):
+            x_acc = data[0]
+            y_acc = data[1]
+            z_acc = data[2]
+            epoch = data[3]
+            svm = sqrt((x_acc * x_acc) + (y_acc * y_acc) + (z_acc * z_acc))
+            timestamp_data = "'" + str(i) + "': " + str({"x": x_acc, "y": y_acc, "z": z_acc,
+                                                         "svm": svm, "ep": epoch})
+            if data != incident_data[-1]:
+                payload += timestamp_data + ", "
+            else:
+                payload += timestamp_data + "}"
+        payload = payload.replace("'", '"')
         self.mqtt_client.publish(topic, payload, 1)
 
 
@@ -33,4 +44,3 @@ if __name__ == "__main__":
 
     main = Main()
     main.mqtt_connect()
-    main.mqtt_publish(1, -4.887451171881, -7.242191473517, 3.438523905867)
