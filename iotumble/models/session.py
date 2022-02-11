@@ -1,5 +1,4 @@
 from boto3 import Session as BotoSession
-from boto3.dynamodb.conditions import Key
 
 from iotumble.models.incident import Incident
 from iotumble.models.timestamp import Timestamp
@@ -11,27 +10,25 @@ class Session:
                               aws_secret_access_key=aws_secret_access_key,
                               region_name=region_name)
         database = session.resource("dynamodb")
-        self.table = database.Table("iotumble_db")
+        self.table = database.Table("iotumble_incidents")
 
     def request_incident(self, incident_id):
-        response = self.table.query(KeyConditionExpression=Key("incident_id").eq(incident_id))
+        response = self.table.get_item(Key={"pk": incident_id, "sk": "incident"})
+        incident = response["Item"]["msg"]
+        incident = dict(sorted(incident.items(), key=lambda d: int(d[0])))
         timestamps = []
-        for item in response["Items"]:
+        for timestamp_id in incident:
             sensor_data = []
-            timestamp_data = item["timestamp_data"]
+            timestamp_data = incident[timestamp_id]
             for data in timestamp_data:
-                sensor_data.append(float(timestamp_data[data]))
-            timestamp = Timestamp(int(item["timestamp"]), sensor_data)
+                if data != "ep":
+                    sensor_data.append(float(timestamp_data[data]))
+            timestamp = Timestamp(int(timestamp_id), int(timestamp_data["ep"]), sensor_data)
             if timestamp not in timestamps:
                 timestamps.append(timestamp)
-        incident = Incident(incident_id, timestamps)
-        return incident
+        return Incident(incident_id, timestamps)
 
-    def request_all_incidents(self):
-        response = self.table.scan()
-        incidents = []
-        for item in response["Items"]:
-            incident = self.request_incident(int(item["incident_id"]))
-            if incident not in incidents:
-                incidents.append(incident)
-        return incidents
+    def request_incident_count(self):
+        response = self.table.get_item(Key={"pk": 0, "sk": "count"})
+        count = response["Item"]["msg"]
+        return count
