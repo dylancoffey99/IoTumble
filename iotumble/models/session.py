@@ -5,30 +5,37 @@ from iotumble.models.timestamp import Timestamp
 
 
 class Session:
-    def __init__(self, aws_access_key_id, aws_secret_access_key, region_name):
-        session = BotoSession(aws_access_key_id=aws_access_key_id,
-                              aws_secret_access_key=aws_secret_access_key,
-                              region_name=region_name)
-        database = session.resource("dynamodb")
-        self.table = database.Table("iotumble_incidents")
+    def __init__(self):
+        self.boto_session = None
+        self.incidents_table = None
+
+    def connect(self, access_key_id, secret_access_key, region_name):
+        self.boto_session = BotoSession(aws_access_key_id=access_key_id,
+                                        aws_secret_access_key=secret_access_key,
+                                        region_name=region_name)
+
+    def create_table(self, table_name):
+        dynamo_db = self.boto_session.resource("dynamodb")
+        self.incidents_table = dynamo_db.Table(table_name)
 
     def request_incident(self, incident_id):
-        response = self.table.get_item(Key={"pk": incident_id, "sk": "incident"})
-        incident = response["Item"]["msg"]
-        incident = dict(sorted(incident.items(), key=lambda d: int(d[0])))
-        timestamps = []
-        for timestamp_id in incident:
-            sensor_data = []
-            timestamp_data = incident[timestamp_id]
-            for data in timestamp_data:
-                if data != "ep":
-                    sensor_data.append(float(timestamp_data[data]))
-            timestamp = Timestamp(int(timestamp_id), int(timestamp_data["ep"]), sensor_data)
-            if timestamp not in timestamps:
-                timestamps.append(timestamp)
-        return Incident(incident_id, timestamps)
+        response = self.incidents_table.get_item(Key={"pk": incident_id, "sk": "incident"})
+        timestamps = response["Item"]["msg"]
+        timestamps = dict(sorted(timestamps.items(), key=lambda d: int(d[0])))
+        incident_timestamps = []
+        for timestamp_id in timestamps:
+            timestamp_data = []
+            sensor_data = timestamps[timestamp_id]
+            for data in sensor_data:
+                timestamp_data.append(float(sensor_data[data]))
+            timestamp = Timestamp(int(timestamp_id), timestamp_data)
+            incident_timestamps.append(timestamp)
+        return Incident(incident_id, incident_timestamps)
 
     def request_incident_count(self):
-        response = self.table.get_item(Key={"pk": 0, "sk": "count"})
+        response = self.incidents_table.get_item(Key={"pk": 0, "sk": "count"})
         count = response["Item"]["msg"]
-        return count
+        return int(count)
+
+    def check_boto_session(self):
+        return bool(isinstance(self.boto_session, type(None)))
