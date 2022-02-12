@@ -7,6 +7,7 @@ class AbstractView(ABC):
     primary_bg = "#333333"
     secondary_bg = "#2B2B2B"
     tertiary_bg = "#3F3F3F"
+    highlight_bg = "#232323"
     primary_fg = "#976FFF"
     secondary_fg = "#4F3A86"
     tertiary_fg = "#C8B3FF"
