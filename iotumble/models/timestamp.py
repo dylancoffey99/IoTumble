@@ -21,9 +21,9 @@ class Timestamp:
     def get_svm(self):
         return self.timestamp_data[3]
 
-    def get_date_time(self):
+    def get_date(self):
         date_time = datetime.fromtimestamp(self.timestamp_data[4])
-        return date_time.strftime("%d %B %Y | %H:%M:%S.%f")[:-3]
+        return date_time.strftime("%d | %B | %Y")
 
     def get_time(self):
         time = datetime.fromtimestamp(self.timestamp_data[4])
