@@ -194,8 +194,7 @@ class HomeView(AbstractView, tk.Tk):
     def fill_incidents(self, incident_count):
         for i in range(incident_count):
             i += 1
-            self.incidents_tree_view.insert("", "end", tags=str(i % 2),
-                                            text="Incident " + str(i))
+            self.incidents_tree_view.insert("", 0, tags=str(i % 2), text="Incident " + str(i))
 
     def highlight_tree_view(self, highlighted, event):
         row = self.incidents_tree_view.identify_row(event.y)

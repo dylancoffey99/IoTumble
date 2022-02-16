@@ -13,7 +13,7 @@ class IncidentView(AbstractView, tk.Toplevel):
         self.withdraw()
         self.controller = controller
         self.icon = controller.home_view.icon
-        self.details_widgets = [ttk.Label(), ttk.Label(), ttk.Label(),ttk.Label(),
+        self.details_widgets = [ttk.Label(), ttk.Label(), ttk.Label(), ttk.Label(),
                                 ttk.Label(), ttk.Label(), ttk.Treeview()]
         self.graph_widgets = [plt.figure(), None]
         self.texts = ["All Acceleration", "Signal Vector Magnitude"]
@@ -115,13 +115,10 @@ class IncidentView(AbstractView, tk.Toplevel):
         actions_button_frame.pack(expand=True, fill="both", side="bottom")
         actions_graph_button = ttk.Button(actions_button_frame, takefocus=False,
                                           text="Export Graph")
-        actions_graph_button.pack(expand=True, fill="both", side="left", ipadx=8)
+        actions_graph_button.pack(expand=True, fill="both", side="left", padx=(0, 5), ipadx=8)
         actions_details_button = ttk.Button(actions_button_frame, takefocus=False,
                                             text="Export Details")
-        actions_details_button.pack(expand=True, fill="both", side="left", padx=5, ipadx=5)
-        actions_delete_button = ttk.Button(actions_button_frame, takefocus=False,
-                                           text="Delete Incident")
-        actions_delete_button.pack(expand=True, fill="both", side="left", ipadx=2)
+        actions_details_button.pack(expand=True, fill="both", side="left", ipadx=5)
 
     def load_graph_style(self):
         self.graph_widgets[0].set(facecolor=self.secondary_bg)
@@ -143,7 +140,7 @@ class IncidentView(AbstractView, tk.Toplevel):
 
     def fill_details_tree_view(self, timestamps):
         for timestamp in timestamps:
-            self.details_widgets[6].insert("", "end", tags=str(timestamp.get_timestamp_id() % 2),
+            self.details_widgets[6].insert("", 0, tags=str(timestamp.get_timestamp_id() % 2),
                                            values=(timestamp.get_time(), timestamp.get_x_acc(),
                                                    timestamp.get_y_acc(), timestamp.get_z_acc(),
                                                    timestamp.get_svm()))
@@ -155,19 +152,19 @@ class IncidentView(AbstractView, tk.Toplevel):
         self.controller.fill_graph(selected_graph)
 
     def plot_graph(self, time, data, color):
-        self.graph_widgets[0].plot(time, data, color=color)
+        self.graph_widgets[0].plot(time, data, color=color, marker=".")
 
     def set_graph(self, time, selected_graph):
-        self.graph_widgets[0].title.set_color(self.primary_fg)
         self.graph_widgets[0].set(title=selected_graph, xlabel="Time (s)", xlim=(time[0], time[-1]))
+        self.graph_widgets[0].title.set_color(self.primary_fg)
+        self.graph_widgets[0].grid(color=self.primary_bg)
         if selected_graph == self.texts[0]:
             self.graph_widgets[0].legend(labels=[self.columns[1], self.columns[2], self.columns[3]],
-                                         facecolor=self.secondary_bg, edgecolor=self.secondary_bg,
-                                         labelcolor=self.primary_fg)
+                                         labelcolor=self.primary_fg, frameon=False)
         if selected_graph == self.texts[1]:
             self.graph_widgets[0].set(ylabel=self.columns[4])
         else:
-            self.graph_widgets[0].set(ylabel="Acceleration ($m/s^2$)")
+            self.graph_widgets[0].set(ylabel="Acceleration (m/s$^2$)")
 
     def get_graph_colors(self):
         return self.primary_fg, self.secondary_fg, self.tertiary_fg
