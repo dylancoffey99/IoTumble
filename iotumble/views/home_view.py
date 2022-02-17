@@ -28,7 +28,7 @@ class HomeView(AbstractView, tk.Tk):
         self.icon.title("IoTumble")
         self.icon.iconbitmap("logo.ico")
         self.icon.configure(background=self.secondary_bg)
-        self.icon.protocol("WM_DELETE_WINDOW", self.close)
+        self.icon.protocol("WM_DELETE_WINDOW", lambda: self.close(self))
 
     def load_style(self):
         style = ttk.Style()
@@ -176,7 +176,7 @@ class HomeView(AbstractView, tk.Tk):
         session_connect_button.pack(expand=True, fill="both", side="left", padx=(0, 5),
                                     pady=(46, 0), ipady=30)
         session_quit_button = ttk.Button(session_frame, takefocus=False, text="Quit",
-                                         command=self.close)
+                                         command=lambda: self.close(self))
         session_quit_button.pack(expand=True, fill="both", side="left", pady=(46, 0),
                                  ipadx=17, ipady=30)
 
@@ -233,6 +233,3 @@ class HomeView(AbstractView, tk.Tk):
         self.load_session()
         self.open(self)
         self.mainloop()
-
-    def close(self):
-        self.destroy()

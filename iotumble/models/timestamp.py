@@ -23,7 +23,7 @@ class Timestamp:
 
     def get_date(self):
         date_time = datetime.fromtimestamp(self.timestamp_data[4])
-        return date_time.strftime("%d | %B | %Y")
+        return date_time.strftime("%d %B %Y")
 
     def get_time(self):
         time = datetime.fromtimestamp(self.timestamp_data[4])

@@ -16,9 +16,10 @@ class AbstractView(ABC):
     def start(self):
         pass
 
-    @abstractmethod
-    def close(self):
-        pass
+    @staticmethod
+    def close(root):
+        root.quit()
+        root.destroy()
 
     @staticmethod
     def open(root):

@@ -34,7 +34,7 @@ class IncidentController(AbstractController):
         self.incident_view.set_graph(time, selected_graph)
 
     def back(self):
-        self.incident_view.close()
+        self.incident_view.close(self.incident_view)
         self.home_view.open(self.home_view)
 
     def main(self):

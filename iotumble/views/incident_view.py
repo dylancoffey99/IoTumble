@@ -44,36 +44,38 @@ class IncidentView(AbstractView, tk.Toplevel):
             widget.bind("<B1-Motion>", lambda e: self.move_window(self, e))
 
     def load_details(self):
-        details_frame = tk.Frame(self.frame, background=self.tertiary_bg)
+        details_frame = tk.Frame(self.frame, background=self.secondary_bg)
         details_frame.pack(expand=True, fill="both", side="left")
+        details_border_frame = tk.Frame(details_frame, background=self.tertiary_bg, width=15)
+        details_border_frame.pack(fill="both", side="right")
         details_title_label = ttk.Label(details_frame, style="tertiary.TLabel",
                                         text="Incident Details")
         details_title_label.pack(fill="both", side="top")
         self.details_widgets[0] = ttk.Label(details_frame, style="secondary.TLabel",
                                             text="Date")
-        self.details_widgets[0].pack(expand=True, fill="both", padx=(0, 15))
+        self.details_widgets[0].pack(expand=True, fill="both")
         self.details_widgets[1] = ttk.Label(details_frame, style="secondary.TLabel",
                                             text=self.columns[0])
-        self.details_widgets[1].pack(expand=True, fill="both", padx=(0, 15))
+        self.details_widgets[1].pack(expand=True, fill="both")
         self.details_widgets[2] = ttk.Label(details_frame, style="secondary.TLabel",
                                             text=self.columns[1])
-        self.details_widgets[2].pack(expand=True, fill="both", padx=(0, 15))
+        self.details_widgets[2].pack(expand=True, fill="both")
         self.details_widgets[3] = ttk.Label(details_frame, style="secondary.TLabel",
                                             text=self.columns[2])
-        self.details_widgets[3].pack(expand=True, fill="both", padx=(0, 15))
+        self.details_widgets[3].pack(expand=True, fill="both")
         self.details_widgets[4] = ttk.Label(details_frame, style="secondary.TLabel",
                                             text=self.columns[3])
-        self.details_widgets[4].pack(expand=True, fill="both", padx=(0, 15))
+        self.details_widgets[4].pack(expand=True, fill="both")
         self.details_widgets[5] = ttk.Label(details_frame, style="secondary.TLabel",
                                             text=self.texts[1])
-        self.details_widgets[5].pack(expand=True, fill="both", padx=(0, 15))
+        self.details_widgets[5].pack(expand=True, fill="both")
         self.details_widgets[6] = ttk.Treeview(details_frame, columns=self.columns,
                                                show="headings", selectmode="none",
                                                style="details.Treeview")
         self.details_widgets[6].pack(expand=True, fill="both", side="left")
-        details_scrollbar = ttk.Scrollbar(details_frame, orient="vertical",
+        details_scrollbar = ttk.Scrollbar(details_border_frame, orient="vertical",
                                           command=self.details_widgets[6].yview)
-        details_scrollbar.pack(fill="both", side="right")
+        details_scrollbar.place(height=280, width=15, y=420)
         self.details_widgets[6].configure(yscrollcommand=details_scrollbar.set)
         self.details_widgets[6].tag_configure("0", background=self.secondary_bg)
         self.details_widgets[6].tag_configure("1", background=self.primary_bg)
@@ -90,6 +92,7 @@ class IncidentView(AbstractView, tk.Toplevel):
         self.graph_widgets[0] = graph_figure.add_subplot(111)
         self.graph_widgets[1] = FigureCanvasTkAgg(graph_figure, master=self.frame)
         graph_plot = self.graph_widgets[1].get_tk_widget()
+        graph_plot.configure(background=self.secondary_bg)
         graph_plot.pack()
         self.load_graph_style()
 
@@ -136,7 +139,7 @@ class IncidentView(AbstractView, tk.Toplevel):
         for i, label in enumerate(self.details_widgets):
             if isinstance(label, ttk.Label):
                 label_text = label.cget("text")
-                self.details_widgets[i].config(text=f"[{label_text}]  =  {str(timestamp_data[i])}")
+                self.details_widgets[i].configure(text=f"{label_text}  =  {str(timestamp_data[i])}")
 
     def fill_details_tree_view(self, timestamps):
         for timestamp in timestamps:
@@ -182,6 +185,3 @@ class IncidentView(AbstractView, tk.Toplevel):
         self.load_actions()
         self.open(self)
         self.mainloop()
-
-    def close(self):
-        self.destroy()
