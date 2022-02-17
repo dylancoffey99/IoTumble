@@ -170,21 +170,35 @@ class HomeView(AbstractView, tk.Tk):
         session_region_label.pack(expand=True)
         session_region_combobox = ttk.Combobox(session_frame, state="readonly",
                                                font=(self.font, 12),
-                                               textvariable=self.input["region"])
-        session_region_combobox["values"] = ("us-east-1", "us-east-2", "us-west-1", "us-west-2")
+                                               textvariable=self.input["region"],
+                                               values=["us-east-1", "us-east-2",
+                                                       "us-west-1", "us-west-2"])
         session_region_combobox.pack()
+        session_connect_button = ttk.Button(session_frame, takefocus=False,
+                                            style="login.TButton", text="Connect",
+                                            command=lambda: self.connect(session_frame))
+        session_connect_button.pack(expand=True, fill="both", side="left", padx=(0, 5),
+                                    pady=(46, 0), ipady=46)
+        session_quit_button = ttk.Button(session_frame, takefocus=False, text="Quit",
+                                         command=self.close)
+        session_quit_button.pack(expand=True, fill="both", side="left", pady=(46, 0),
+                                 ipadx=18, ipady=46)
 
-    def load_buttons(self):
-        buttons_frame = tk.Frame(self.frame, background=self.secondary_bg)
-        buttons_frame.pack(expand=True, fill="both", side="bottom")
-        connect_button = ttk.Button(buttons_frame, takefocus=False, style="login.TButton",
-                                    text="Connect", command=self.controller.connect_session)
-        connect_button.pack(expand=True, fill="both", side="left", padx=(0, 5), pady=(46, 0))
-        quit_button = ttk.Button(buttons_frame, takefocus=False, text="Quit", command=self.close)
-        quit_button.pack(expand=True, fill="both", side="left", pady=(46, 0), ipadx=18)
+    def connect(self, frame):
+        self.controller.connect(self.input["access"].get(), self.input["secret"].get(),
+                                self.input["region"].get())
+        for i, widget in enumerate(frame.winfo_children()):
+            if i != 0:
+                widget.destroy()
+        disconnect_button = ttk.Button(frame, takefocus=False, text="Disconnect",
+                                       command=lambda: self.disconnect(frame))
+        disconnect_button.pack(expand=True, fill="both", ipadx=55)
 
-    def get_input(self):
-        return self.input["access"].get(), self.input["secret"].get(), self.input["region"].get()
+    def disconnect(self, frame):
+        self.controller.disconnect()
+        self.clear_tree_view()
+        frame.destroy()
+        self.load_session()
 
     def fill_input(self, access_key_id, secret_access_key, region_name):
         self.input["access"].set(access_key_id)
@@ -201,6 +215,10 @@ class HomeView(AbstractView, tk.Tk):
         self.tk.call(self.incidents_tree_view, "tag", "remove", "highlight")
         if highlighted:
             self.tk.call(self.incidents_tree_view, "tag", "add", "highlight", row)
+
+    def clear_tree_view(self):
+        for item in self.incidents_tree_view.get_children():
+            self.incidents_tree_view.delete(item)
 
     def switch(self):
         selected = self.incidents_tree_view.selection()[0]
@@ -221,7 +239,6 @@ class HomeView(AbstractView, tk.Tk):
         self.load_header()
         self.load_incidents()
         self.load_session()
-        self.load_buttons()
         self.open(self)
         self.mainloop()
 

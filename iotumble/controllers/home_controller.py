@@ -10,12 +10,13 @@ class HomeController(AbstractController):
                                   config.get("config", "region_name"))
         self.session = Session()
 
-    def connect_session(self):
-        if self.session.check_boto_session():
-            home_input = self.home_view.get_input()
-            self.session.connect(home_input[0], home_input[1], home_input[2])
-            self.session.create_table("iotumble_incidents")
-            self.fill_incidents()
+    def connect(self, access_key_id, secret_access_key, region_name):
+        self.session.connect(access_key_id, secret_access_key, region_name)
+        self.session.create_table("iotumble_incidents")
+        self.fill_incidents()
+
+    def disconnect(self):
+        self.session.disconnect()
 
     def fill_incidents(self):
         incident_count = self.session.request_incident_count()

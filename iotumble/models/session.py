@@ -14,6 +14,10 @@ class Session:
                                         aws_secret_access_key=secret_access_key,
                                         region_name=region_name)
 
+    def disconnect(self):
+        self.boto_session = None
+        self.incidents_table = None
+
     def create_table(self, table_name):
         dynamo_db = self.boto_session.resource("dynamodb")
         self.incidents_table = dynamo_db.Table(table_name)
@@ -36,6 +40,3 @@ class Session:
         response = self.incidents_table.get_item(Key={"pk": 0, "sk": "count"})
         count = response["Item"]["msg"]
         return int(count)
-
-    def check_boto_session(self):
-        return bool(isinstance(self.boto_session, type(None)))

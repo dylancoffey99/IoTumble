@@ -1,6 +1,5 @@
-from tkinter import EventType
-
 from abc import ABC, abstractmethod
+from tkinter import EventType
 
 
 class AbstractView(ABC):
