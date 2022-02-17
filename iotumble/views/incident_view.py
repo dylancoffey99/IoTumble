@@ -95,7 +95,7 @@ class IncidentView(AbstractView, tk.Toplevel):
 
     def load_actions(self):
         actions_frame = tk.Frame(self.frame, background=self.secondary_bg)
-        actions_frame.pack(expand=True, fill="both", side="top", ipadx=60)
+        actions_frame.pack(expand=True, fill="both", side="top", pady=(15, 0), ipadx=60)
         actions_title_label = ttk.Label(actions_frame, style="tertiary.TLabel",
                                         text="Incident Actions")
         actions_title_label.pack(fill="both", side="top")
@@ -115,10 +115,10 @@ class IncidentView(AbstractView, tk.Toplevel):
         actions_button_frame.pack(expand=True, fill="both", side="bottom")
         actions_graph_button = ttk.Button(actions_button_frame, takefocus=False,
                                           text="Export Graph")
-        actions_graph_button.pack(expand=True, fill="both", side="left", padx=(0, 5), ipadx=8)
+        actions_graph_button.pack(expand=True, fill="both", side="left", padx=(0, 5), ipadx=5)
         actions_details_button = ttk.Button(actions_button_frame, takefocus=False,
                                             text="Export Details")
-        actions_details_button.pack(expand=True, fill="both", side="left", ipadx=5)
+        actions_details_button.pack(expand=True, fill="both", side="left", ipadx=2)
 
     def load_graph_style(self):
         self.graph_widgets[0].set(facecolor=self.secondary_bg)

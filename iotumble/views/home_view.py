@@ -38,16 +38,14 @@ class HomeView(AbstractView, tk.Tk):
                     "anchor": "center", "background": self.primary_bg, "borderwidth": 0,
                     "font": (self.font, 12, "bold"), "foreground": self.primary_fg
                 }, "map": {
-                    "background": [("pressed", self.highlight_bg)],
-                    "foreground": [("pressed", self.primary_fg)],
+                    "background": [("pressed", self.highlight_bg)]
                 }},
             "header.TButton": {
                 "configure": {
                     "anchor": "center", "background": self.primary_bg, "borderwidth": 0,
                     "font": (self.font, 14, "bold"), "foreground": self.primary_fg
                 }, "map": {
-                    "background": [("active", self.highlight_bg)],
-                    "foreground": [("active", self.primary_fg)]
+                    "background": [("active", self.highlight_bg)]
                 }},
             "TCombobox": {
                 "configure": {
@@ -81,10 +79,8 @@ class HomeView(AbstractView, tk.Tk):
                 }},
             "TScrollbar": {
                 "configure": {
-                    "background": self.primary_fg, "borderwidth": 0,
-                    "troughcolor": self.tertiary_bg
-                }, "map": {
-                    "background": [("disabled", self.tertiary_bg)],
+                    "background": self.tertiary_bg, "borderwidth": 0,
+                    "troughcolor": self.highlight_bg
                 }},
             "incidents.Treeview": {
                 "configure": {
@@ -178,27 +174,23 @@ class HomeView(AbstractView, tk.Tk):
                                             style="login.TButton", text="Connect",
                                             command=lambda: self.connect(session_frame))
         session_connect_button.pack(expand=True, fill="both", side="left", padx=(0, 5),
-                                    pady=(46, 0), ipady=46)
+                                    pady=(46, 0), ipady=30)
         session_quit_button = ttk.Button(session_frame, takefocus=False, text="Quit",
                                          command=self.close)
         session_quit_button.pack(expand=True, fill="both", side="left", pady=(46, 0),
-                                 ipadx=18, ipady=46)
+                                 ipadx=17, ipady=30)
 
     def connect(self, frame):
         self.controller.connect(self.input["access"].get(), self.input["secret"].get(),
                                 self.input["region"].get())
-        for i, widget in enumerate(frame.winfo_children()):
-            if i != 0:
-                widget.destroy()
         disconnect_button = ttk.Button(frame, takefocus=False, text="Disconnect",
-                                       command=lambda: self.disconnect(frame))
-        disconnect_button.pack(expand=True, fill="both", ipadx=55)
+                                       command=lambda: self.disconnect(disconnect_button))
+        disconnect_button.place(height=460, width=293, y=22)
 
-    def disconnect(self, frame):
+    def disconnect(self, button):
         self.controller.disconnect()
         self.clear_tree_view()
-        frame.destroy()
-        self.load_session()
+        button.destroy()
 
     def fill_input(self, access_key_id, secret_access_key, region_name):
         self.input["access"].set(access_key_id)
