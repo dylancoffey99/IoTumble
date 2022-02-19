@@ -33,6 +33,22 @@ class IncidentController(AbstractController):
             self.incident_view.plot_graph(time, data, colors[2])
         self.incident_view.set_graph(time, selected_graph)
 
+    def export_csv(self):
+        csv_path = self.join_path("exports", "csv")
+        if not self.check_path(csv_path):
+            self.create_path(csv_path)
+        incident_id = self.incident.get_incident_id()
+        file_path = self.join_path(csv_path, f"Incident {incident_id} - Timestamps")
+        self.incident.export_timestamps(file_path)
+
+    def export_graph(self, selected_graph):
+        graph_path = self.join_path("exports", "graphs")
+        if not self.check_path(graph_path):
+            self.create_path(graph_path)
+        incident_id = self.incident.get_incident_id()
+        file_path = self.join_path(graph_path, f"Incident {incident_id} - {selected_graph}")
+        self.incident_view.export_graph(file_path)
+
     def back(self):
         self.incident_view.close(self.incident_view)
         self.home_view.open(self.home_view)

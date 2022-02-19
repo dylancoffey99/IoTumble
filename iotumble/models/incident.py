@@ -1,3 +1,6 @@
+from csv import writer
+
+
 class Incident:
     def __init__(self, incident_id, timestamps):
         self.incident_id = incident_id
@@ -12,7 +15,7 @@ class Incident:
     def get_timestamps_time(self):
         time = []
         for i in range(len(self.timestamps)):
-            time.append(i/10)
+            time.append(i / 10)
         return time
 
     def get_timestamps_x(self):
@@ -46,3 +49,13 @@ class Incident:
             if timestamp.get_svm() == max_svm:
                 max_timestamp = timestamp
         return max_timestamp
+
+    def export_timestamps(self, csv_path):
+        with open(f"{csv_path}.csv", "w", newline="", encoding="utf-8") as file:
+            csv = writer(file, delimiter=",")
+            csv.writerow(["Timestamp ID", "Timestamp", "X-Acceleration", "Y-Acceleration",
+                          "Z-Acceleration", "Signal Vector Magnitude"])
+            for timestamp in self.timestamps:
+                csv.writerow([str(timestamp.get_timestamp_id()), timestamp.get_time(),
+                              str(timestamp.get_x_acc()), str(timestamp.get_y_acc()),
+                              str(timestamp.get_z_acc()), str(timestamp.get_svm())])

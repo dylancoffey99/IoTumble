@@ -3,11 +3,9 @@ from iotumble.models.session import Session
 
 
 class HomeController(AbstractController):
-    def __init__(self, config):
+    def __init__(self):
         self.home_view = self.load_view("Home")(self)
-        self.home_view.fill_input(config.get("config", "access_key_id"),
-                                  config.get("config", "secret_access_key"),
-                                  config.get("config", "region_name"))
+        self.fill_inputs()
         self.session = Session()
 
     def connect(self, access_key_id, secret_access_key, region_name):
@@ -17,6 +15,15 @@ class HomeController(AbstractController):
 
     def disconnect(self):
         self.session.disconnect()
+
+    def fill_inputs(self):
+        config_path = "config"
+        if not self.check_path(f"{config_path}.ini"):
+            self.create_path(config_path)
+        config = self.read_config()
+        self.home_view.fill_inputs(config.get(config_path, "access_key_id"),
+                                   config.get(config_path, "secret_access_key"),
+                                   config.get(config_path, "region_name"))
 
     def fill_incidents(self):
         incident_count = self.session.request_incident_count()

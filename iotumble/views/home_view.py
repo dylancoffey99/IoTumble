@@ -14,7 +14,7 @@ class HomeView(AbstractView, tk.Tk):
         self.icon = tk.Toplevel()
         self.header_logo = ImageTk.PhotoImage(Image.open("logo.png"))
         self.incidents_tree_view = ttk.Treeview()
-        self.input = {"access": tk.StringVar(), "secret": tk.StringVar(), "region": tk.StringVar()}
+        self.inputs = {"access": tk.StringVar(), "secret": tk.StringVar(), "region": tk.StringVar()}
 
     def load_root(self):
         self.overrideredirect(True)
@@ -153,20 +153,20 @@ class HomeView(AbstractView, tk.Tk):
                                          text="Access Key ID")
         session_access_label.pack(expand=True, pady=(18, 0))
         session_access_entry = ttk.Entry(session_frame, font=(self.font, 12), width=21,
-                                         textvariable=self.input["access"])
+                                         textvariable=self.inputs["access"])
         session_access_entry.pack()
         session_secret_label = ttk.Label(session_frame, style="secondary.TLabel",
                                          text="Secret Access Key")
         session_secret_label.pack(expand=True)
         session_secret_entry = ttk.Entry(session_frame, font=(self.font, 12), width=21,
-                                         textvariable=self.input["secret"])
+                                         textvariable=self.inputs["secret"])
         session_secret_entry.pack()
         session_region_label = ttk.Label(session_frame, style="secondary.TLabel",
                                          text="Region Name")
         session_region_label.pack(expand=True)
         session_region_combobox = ttk.Combobox(session_frame, state="readonly",
                                                font=(self.font, 12),
-                                               textvariable=self.input["region"],
+                                               textvariable=self.inputs["region"],
                                                values=["us-east-1", "us-east-2",
                                                        "us-west-1", "us-west-2"])
         session_region_combobox.pack()
@@ -180,22 +180,22 @@ class HomeView(AbstractView, tk.Tk):
         session_quit_button.pack(expand=True, fill="both", side="left", pady=(46, 0),
                                  ipadx=17, ipady=30)
 
-    def connect(self, frame):
-        self.controller.connect(self.input["access"].get(), self.input["secret"].get(),
-                                self.input["region"].get())
-        disconnect_button = ttk.Button(frame, takefocus=False, text="Disconnect",
+    def connect(self, session_frame):
+        self.controller.connect(self.inputs["access"].get(), self.inputs["secret"].get(),
+                                self.inputs["region"].get())
+        disconnect_button = ttk.Button(session_frame, takefocus=False, text="Disconnect",
                                        command=lambda: self.disconnect(disconnect_button))
         disconnect_button.place(height=460, width=293, y=22)
 
-    def disconnect(self, button):
+    def disconnect(self, disconnect_button):
         self.controller.disconnect()
         self.clear_tree_view()
-        button.destroy()
+        disconnect_button.destroy()
 
-    def fill_input(self, access_key_id, secret_access_key, region_name):
-        self.input["access"].set(access_key_id)
-        self.input["secret"].set(secret_access_key)
-        self.input["region"].set(region_name)
+    def fill_inputs(self, access_key_id, secret_access_key, region_name):
+        self.inputs["access"].set(access_key_id)
+        self.inputs["secret"].set(secret_access_key)
+        self.inputs["region"].set(region_name)
 
     def fill_incidents(self, incident_count):
         for i in range(incident_count):

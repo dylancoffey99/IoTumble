@@ -15,7 +15,7 @@ class IncidentView(AbstractView, tk.Toplevel):
         self.icon = controller.home_view.icon
         self.details_widgets = [ttk.Label(), ttk.Label(), ttk.Label(), ttk.Label(),
                                 ttk.Label(), ttk.Label(), ttk.Treeview()]
-        self.graph_widgets = [plt.figure(), None]
+        self.graph_widgets = [plt.figure(), plt.axes()]
         self.texts = ["All Acceleration", "Signal Vector Magnitude"]
         self.columns = ["Timestamp", "X-Acceleration", "Y-Acceleration", "Z-Acceleration", "SVM"]
 
@@ -88,12 +88,11 @@ class IncidentView(AbstractView, tk.Toplevel):
     def load_graph(self):
         graph_title_label = ttk.Label(self.frame, style="tertiary.TLabel", text="Incident Graph")
         graph_title_label.pack(fill="both", side="top")
-        graph_figure = plt.figure(facecolor=self.secondary_bg)
-        self.graph_widgets[0] = graph_figure.add_subplot(111)
-        self.graph_widgets[1] = FigureCanvasTkAgg(graph_figure, master=self.frame)
-        graph_plot = self.graph_widgets[1].get_tk_widget()
-        graph_plot.configure(background=self.secondary_bg)
-        graph_plot.pack()
+        self.graph_widgets[0] = plt.figure(facecolor=self.secondary_bg)
+        self.graph_widgets[1] = self.graph_widgets[0].add_subplot(111)
+        graph_canvas = FigureCanvasTkAgg(self.graph_widgets[0], master=self.frame).get_tk_widget()
+        graph_canvas.configure(background=self.secondary_bg)
+        graph_canvas.pack()
         self.load_graph_style()
 
     def load_actions(self):
@@ -113,25 +112,26 @@ class IncidentView(AbstractView, tk.Toplevel):
                                                       self.texts[1]])
         actions_graph_combobox.pack(expand=True, side="right")
         actions_graph_combobox.bind("<<ComboboxSelected>>",
-                                    lambda e: self.select_graph(actions_input))
+                                    lambda e: self.select_graph(actions_input.get()))
         actions_button_frame = tk.Frame(self.frame, background=self.secondary_bg)
         actions_button_frame.pack(expand=True, fill="both", side="bottom")
         actions_graph_button = ttk.Button(actions_button_frame, takefocus=False,
-                                          text="Export Graph")
+                                          text="Export Graph", command=
+                                          lambda: self.controller.export_graph(actions_input.get()))
         actions_graph_button.pack(expand=True, fill="both", side="left", padx=(0, 5), ipadx=5)
-        actions_details_button = ttk.Button(actions_button_frame, takefocus=False,
-                                            text="Export Details")
-        actions_details_button.pack(expand=True, fill="both", side="left", ipadx=2)
+        actions_csv_button = ttk.Button(actions_button_frame, takefocus=False,
+                                        text="Export CSV", command=self.controller.export_csv)
+        actions_csv_button.pack(expand=True, fill="both", side="left", ipadx=2)
 
     def load_graph_style(self):
-        self.graph_widgets[0].set(facecolor=self.secondary_bg)
-        self.graph_widgets[0].xaxis.label.set_color(self.primary_fg)
-        self.graph_widgets[0].yaxis.label.set_color(self.primary_fg)
-        self.graph_widgets[0].spines["top"].set_color(self.primary_fg)
-        self.graph_widgets[0].spines["bottom"].set_color(self.primary_fg)
-        self.graph_widgets[0].spines["left"].set_color(self.primary_fg)
-        self.graph_widgets[0].spines["right"].set_color(self.primary_fg)
-        self.graph_widgets[0].tick_params(color=self.primary_fg, labelcolor=self.primary_fg)
+        self.graph_widgets[1].set(facecolor=self.secondary_bg)
+        self.graph_widgets[1].xaxis.label.set_color(self.primary_fg)
+        self.graph_widgets[1].yaxis.label.set_color(self.primary_fg)
+        self.graph_widgets[1].spines["top"].set_color(self.primary_fg)
+        self.graph_widgets[1].spines["bottom"].set_color(self.primary_fg)
+        self.graph_widgets[1].spines["left"].set_color(self.primary_fg)
+        self.graph_widgets[1].spines["right"].set_color(self.primary_fg)
+        self.graph_widgets[1].tick_params(color=self.primary_fg, labelcolor=self.primary_fg)
 
     def fill_details_labels(self, timestamp):
         timestamp_data = [timestamp.get_date(), timestamp.get_time(), timestamp.get_x_acc(),
@@ -148,26 +148,28 @@ class IncidentView(AbstractView, tk.Toplevel):
                                                    timestamp.get_y_acc(), timestamp.get_z_acc(),
                                                    timestamp.get_svm()))
 
-    def select_graph(self, actions_input):
-        selected_graph = actions_input.get()
-        self.graph_widgets[0].clear()
-        self.graph_widgets[1].draw_idle()
+    def select_graph(self, selected_graph):
+        self.graph_widgets[1].clear()
         self.controller.fill_graph(selected_graph)
 
     def plot_graph(self, time, data, color):
-        self.graph_widgets[0].plot(time, data, color=color, marker=".")
+        self.graph_widgets[1].plot(time, data, color=color, marker=".")
 
     def set_graph(self, time, selected_graph):
-        self.graph_widgets[0].set(title=selected_graph, xlabel="Time (s)", xlim=(time[0], time[-1]))
-        self.graph_widgets[0].title.set_color(self.primary_fg)
-        self.graph_widgets[0].grid(color=self.primary_bg)
+        self.graph_widgets[1].set(title=selected_graph, xlabel="Time (s)", xlim=(time[0], time[-1]))
+        self.graph_widgets[1].title.set_color(self.primary_fg)
+        self.graph_widgets[1].grid(color=self.primary_bg)
         if selected_graph == self.texts[0]:
-            self.graph_widgets[0].legend(labels=[self.columns[1], self.columns[2], self.columns[3]],
+            self.graph_widgets[1].legend(labels=[self.columns[1], self.columns[2], self.columns[3]],
                                          labelcolor=self.primary_fg, frameon=False)
         if selected_graph == self.texts[1]:
-            self.graph_widgets[0].set(ylabel=self.columns[4])
+            self.graph_widgets[1].set(ylabel=self.columns[4])
         else:
-            self.graph_widgets[0].set(ylabel="Acceleration (m/s$^2$)")
+            self.graph_widgets[1].set(ylabel="Acceleration (m/s$^2$)")
+        self.graph_widgets[0].canvas.draw()
+
+    def export_graph(self, graph_path):
+        self.graph_widgets[0].savefig(graph_path)
 
     def get_graph_colors(self):
         return self.primary_fg, self.secondary_fg, self.tertiary_fg
