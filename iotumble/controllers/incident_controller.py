@@ -40,14 +40,19 @@ class IncidentController(AbstractController):
         incident_id = self.incident.get_incident_id()
         file_path = self.join_path(csv_path, f"Incident {incident_id} - Timestamps")
         self.incident.export_timestamps(file_path)
+        self.home_view.show_message(f"Successfully exported incident:\n'{file_path}.csv'.")
 
     def export_graph(self, selected_graph):
-        graph_path = self.join_path("exports", "graphs")
-        if not self.check_path(graph_path):
-            self.create_path(graph_path)
-        incident_id = self.incident.get_incident_id()
-        file_path = self.join_path(graph_path, f"Incident {incident_id} - {selected_graph}")
-        self.incident_view.export_graph(file_path)
+        if selected_graph == "":
+            self.home_view.show_message("Please select a graph to export!")
+        else:
+            graph_path = self.join_path("exports", "graphs")
+            if not self.check_path(graph_path):
+                self.create_path(graph_path)
+            incident_id = self.incident.get_incident_id()
+            file_path = self.join_path(graph_path, f"Incident {incident_id} - {selected_graph}")
+            self.incident_view.export_graph(file_path)
+            self.home_view.show_message(f"Successfully exported graph:\n'{file_path}.png'.")
 
     def back(self):
         self.incident_view.close(self.incident_view)

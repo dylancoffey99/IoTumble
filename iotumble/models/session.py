@@ -1,4 +1,5 @@
 from boto3 import Session as BotoSession
+from botocore.exceptions import ClientError
 
 from iotumble.models.incident import Incident
 from iotumble.models.timestamp import Timestamp
@@ -23,20 +24,28 @@ class Session:
         self.incidents_table = dynamo_db.Table(table_name)
 
     def request_incident(self, incident_id):
-        response = self.incidents_table.get_item(Key={"pk": incident_id, "sk": "incident"})
-        timestamps = response["Item"]["msg"]
-        timestamps = dict(sorted(timestamps.items(), key=lambda d: int(d[0])))
-        incident_timestamps = []
-        for timestamp_id in timestamps:
-            timestamp_data = []
-            sensor_data = timestamps[timestamp_id]
-            for data in sensor_data:
-                timestamp_data.append(float(sensor_data[data]))
-            timestamp = Timestamp(int(timestamp_id), timestamp_data)
-            incident_timestamps.append(timestamp)
-        return Incident(incident_id, incident_timestamps)
+        try:
+            response = self.incidents_table.get_item(Key={"pk": incident_id, "sk": "incident"})
+            timestamps = response["Item"]["msg"]
+        except KeyError:
+            return False
+        else:
+            timestamps = dict(sorted(timestamps.items(), key=lambda d: int(d[0])))
+            incident_timestamps = []
+            for timestamp_id in timestamps:
+                timestamp_data = []
+                sensor_data = timestamps[timestamp_id]
+                for data in sensor_data:
+                    timestamp_data.append(float(sensor_data[data]))
+                timestamp = Timestamp(int(timestamp_id), timestamp_data)
+                incident_timestamps.append(timestamp)
+            return Incident(incident_id, incident_timestamps)
 
     def request_incident_count(self):
-        response = self.incidents_table.get_item(Key={"pk": 0, "sk": "count"})
-        count = response["Item"]["msg"]
-        return int(count)
+        try:
+            response = self.incidents_table.get_item(Key={"pk": 0, "sk": "count"})
+            count = response["Item"]["msg"]
+        except ClientError:
+            return False
+        else:
+            return int(count)

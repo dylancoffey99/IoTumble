@@ -32,9 +32,6 @@ class IncidentView(AbstractView, tk.Toplevel):
         header_logo_label = ttk.Label(header_frame, style="primary.TLabel",
                                       image=self.controller.home_view.header_logo)
         header_logo_label.pack(fill="both", side="left", padx=44)
-        header_options_button = ttk.Button(header_frame, takefocus=False, style="header.TButton",
-                                           text="Options")
-        header_options_button.pack(fill="both", side="left", ipadx=42)
         header_back_button = ttk.Button(header_frame, takefocus=False, style="header.TButton",
                                         text="Back", command=self.controller.back)
         header_back_button.pack(fill="both", side="left", ipadx=55)

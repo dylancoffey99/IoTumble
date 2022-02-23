@@ -64,8 +64,7 @@ class HomeView(AbstractView, tk.Tk):
             "primary.TLabel": {
                 "configure": {
                     "anchor": "center", "background": self.primary_bg,
-                    "font": (self.font, 12, "bold"), "foreground": self.primary_fg,
-                    "padding": 10
+                    "font": (self.font, 12, "bold"), "foreground": self.primary_fg, "padding": 10
                 }},
             "secondary.TLabel": {
                 "configure": {
@@ -82,7 +81,7 @@ class HomeView(AbstractView, tk.Tk):
                     "background": self.tertiary_bg, "borderwidth": 0,
                     "troughcolor": self.highlight_bg
                 }},
-            "incidents.Treeview": {
+            "Treeview": {
                 "configure": {
                     "background": self.primary_bg, "borderwidth": 0,
                     "fieldbackground": self.secondary_bg, "font": (self.font, 12),
@@ -129,8 +128,7 @@ class HomeView(AbstractView, tk.Tk):
         incidents_title_label = ttk.Label(incidents_frame, style="tertiary.TLabel",
                                           text="Incidents")
         incidents_title_label.pack(fill="both")
-        self.incidents_tree_view = ttk.Treeview(incidents_frame, show="tree", selectmode="browse",
-                                                style="incidents.Treeview")
+        self.incidents_tree_view = ttk.Treeview(incidents_frame, show="tree", selectmode="browse")
         self.incidents_tree_view.pack(expand=True, fill="both", side="left")
         incidents_scrollbar = ttk.Scrollbar(incidents_frame, orient="vertical",
                                             command=self.incidents_tree_view.yview)
@@ -170,8 +168,7 @@ class HomeView(AbstractView, tk.Tk):
                                                values=["us-east-1", "us-east-2",
                                                        "us-west-1", "us-west-2"])
         session_region_combobox.pack()
-        session_connect_button = ttk.Button(session_frame, takefocus=False,
-                                            style="login.TButton", text="Connect",
+        session_connect_button = ttk.Button(session_frame, takefocus=False, text="Connect",
                                             command=lambda: self.connect(session_frame))
         session_connect_button.pack(expand=True, fill="both", side="left", padx=(0, 5),
                                     pady=(46, 0), ipady=30)
@@ -180,12 +177,31 @@ class HomeView(AbstractView, tk.Tk):
         session_quit_button.pack(expand=True, fill="both", side="left", pady=(46, 0),
                                  ipadx=17, ipady=30)
 
+    def show_message(self, message_text):
+        message = tk.Toplevel()
+        message.overrideredirect(True)
+        message.attributes("-topmost", True)
+        message.configure(background=self.secondary_bg)
+        message_frame = tk.Frame(message, background=self.secondary_bg, relief="solid",
+                                 borderwidth=1)
+        message_frame.pack(expand=True, fill="both")
+        message_label = ttk.Label(message_frame, anchor="center", justify="center", wraplength=250,
+                                  style="secondary.TLabel", text=message_text)
+        message_label.pack(expand=True, fill="both")
+        message_label.bind("<ButtonPress-1>", lambda e: self.pressed_window(message, True, e))
+        message_label.bind("<ButtonRelease-1>", lambda e: self.pressed_window(message, False, e))
+        message_label.bind("<B1-Motion>", lambda e: self.move_window(message, e))
+        message_button = ttk.Button(message_frame, takefocus=False, text="Continue",
+                                    command=message.destroy)
+        message_button.pack(expand=True, fill="both")
+        self.set_geometry(message, 300, 300)
+
     def connect(self, session_frame):
-        self.controller.connect(self.inputs["access"].get(), self.inputs["secret"].get(),
-                                self.inputs["region"].get())
-        disconnect_button = ttk.Button(session_frame, takefocus=False, text="Disconnect",
-                                       command=lambda: self.disconnect(disconnect_button))
-        disconnect_button.place(height=460, width=293, y=22)
+        if self.controller.connect(self.inputs["access"].get(), self.inputs["secret"].get(),
+                                   self.inputs["region"].get()):
+            disconnect_button = ttk.Button(session_frame, takefocus=False, text="Disconnect",
+                                           command=lambda: self.disconnect(disconnect_button))
+            disconnect_button.place(height=460, width=293, y=22)
 
     def disconnect(self, disconnect_button):
         self.controller.disconnect()
