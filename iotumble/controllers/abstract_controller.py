@@ -22,10 +22,10 @@ class AbstractController(ABC):
         return view
 
     @staticmethod
-    def read_config():
-        config = ConfigParser()
-        config.read("config.ini")
-        return config
+    def read_credentials(credentials_path):
+        credentials = ConfigParser()
+        credentials.read(credentials_path)
+        return credentials
 
     @staticmethod
     def check_path(path_name):
@@ -37,13 +37,13 @@ class AbstractController(ABC):
 
     @staticmethod
     def create_path(path_name):
-        if path_name == "config":
-            config = ConfigParser()
-            config.add_section(path_name)
-            config.set(path_name, "access_key_id", "")
-            config.set(path_name, "secret_access_key", "")
-            config.set(path_name, "region_name", "")
-            with open(f"{path_name}.ini", "w", encoding="utf-8") as file:
-                config.write(file)
+        if path_name == ".aws\\credentials.ini":
+            credentials = ConfigParser()
+            credentials.add_section("access")
+            credentials.set("access", "access_key_id", "")
+            credentials.set("access", "secret_access_key", "")
+            credentials.set("access", "region_name", "")
+            with open(path_name, "w", encoding="utf-8") as file:
+                credentials.write(file)
         else:
             makedirs(path_name)

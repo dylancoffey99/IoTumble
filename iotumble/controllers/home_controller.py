@@ -19,14 +19,22 @@ class HomeController(AbstractController):
     def disconnect(self):
         self.session.disconnect()
 
+    def create_credentials(self):
+        aws_path = ".aws"
+        credentials_path = self.join_path(aws_path, "credentials.ini")
+        if not self.check_path(aws_path):
+            self.create_path(aws_path)
+            self.create_path(credentials_path)
+        else:
+            if not self.check_path(credentials_path):
+                self.create_path(credentials_path)
+        return self.read_credentials(credentials_path)
+
     def fill_inputs(self):
-        config_path = "config"
-        if not self.check_path(f"{config_path}.ini"):
-            self.create_path(config_path)
-        config = self.read_config()
-        self.home_view.fill_inputs(config.get(config_path, "access_key_id"),
-                                   config.get(config_path, "secret_access_key"),
-                                   config.get(config_path, "region_name"))
+        credentials = self.create_credentials()
+        self.home_view.fill_inputs(credentials.get("access", "access_key_id"),
+                                   credentials.get("access", "secret_access_key"),
+                                   credentials.get("access", "region_name"))
 
     def fill_incidents(self):
         incident_count = self.session.request_incident_count()

@@ -151,13 +151,13 @@ class HomeView(AbstractView, tk.Tk):
                                          text="Access Key ID")
         session_access_label.pack(expand=True, pady=(18, 0))
         session_access_entry = ttk.Entry(session_frame, font=(self.font, 12), width=21,
-                                         textvariable=self.inputs["access"])
+                                         show="*", textvariable=self.inputs["access"])
         session_access_entry.pack()
         session_secret_label = ttk.Label(session_frame, style="secondary.TLabel",
                                          text="Secret Access Key")
         session_secret_label.pack(expand=True)
         session_secret_entry = ttk.Entry(session_frame, font=(self.font, 12), width=21,
-                                         textvariable=self.inputs["secret"])
+                                         show="*", textvariable=self.inputs["secret"])
         session_secret_entry.pack()
         session_region_label = ttk.Label(session_frame, style="secondary.TLabel",
                                          text="Region Name")
