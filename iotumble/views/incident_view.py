@@ -1,5 +1,7 @@
+"""This module contains the IncidentView class, to represent an incident view of the program."""
 import tkinter as tk
 from tkinter import ttk
+from typing import List, Tuple
 
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -8,7 +10,14 @@ from iotumble.views.abstract_view import AbstractView
 
 
 class IncidentView(AbstractView, tk.Toplevel):
+    """
+    This class represents an incident view of the program, implementing AbstractView and
+    tk.Toplevel. It contains a constructor, the methods for loading its icon and widgets, the
+    methods for interacting with its widgets and controller, and the implemented abstract methods.
+    """
+
     def __init__(self, controller):
+        """This constructor instantiates an IncidentView object."""
         super().__init__()
         self.withdraw()
         self.controller = controller
@@ -41,6 +50,10 @@ class IncidentView(AbstractView, tk.Toplevel):
             widget.bind("<B1-Motion>", lambda e: self.move_window(self, e))
 
     def load_details(self):
+        """
+        This method loads the details section and its widgets, such as its frames, labels, treeview,
+        and scrollbar. It then calls fill_details() from IncidentController.
+        """
         details_frame = tk.Frame(self.frame, background=self.secondary_bg)
         details_frame.pack(expand=True, fill="both", side="left")
         details_border_frame = tk.Frame(details_frame, background=self.tertiary_bg, width=15)
@@ -83,6 +96,10 @@ class IncidentView(AbstractView, tk.Toplevel):
         self.controller.fill_details()
 
     def load_graph(self):
+        """
+        This method loads the graph section and its widgets, such as its label, graph figure,
+        and graph canvas.
+        """
         graph_title_label = ttk.Label(self.frame, style="tertiary.TLabel", text="Incident Graph")
         graph_title_label.pack(fill="both", side="top")
         self.graph_widgets[0] = plt.figure(facecolor=self.secondary_bg)
@@ -90,9 +107,12 @@ class IncidentView(AbstractView, tk.Toplevel):
         graph_canvas = FigureCanvasTkAgg(self.graph_widgets[0], master=self.frame).get_tk_widget()
         graph_canvas.configure(background=self.secondary_bg)
         graph_canvas.pack()
-        self.load_graph_style()
 
     def load_actions(self):
+        """
+        This method loads the actions section and its widgets, such as its frames, labels, combobox,
+        and buttons.
+        """
         actions_frame = tk.Frame(self.frame, background=self.secondary_bg)
         actions_frame.pack(expand=True, fill="both", side="top", pady=(15, 0), ipadx=60)
         actions_title_label = ttk.Label(actions_frame, style="tertiary.TLabel",
@@ -121,6 +141,7 @@ class IncidentView(AbstractView, tk.Toplevel):
         actions_csv_button.pack(expand=True, fill="both", side="left", ipadx=2)
 
     def load_graph_style(self):
+        """This method loads the graph style and sets its colors."""
         self.graph_widgets[1].set(facecolor=self.secondary_bg)
         self.graph_widgets[1].xaxis.label.set_color(self.primary_fg)
         self.graph_widgets[1].yaxis.label.set_color(self.primary_fg)
@@ -130,30 +151,62 @@ class IncidentView(AbstractView, tk.Toplevel):
         self.graph_widgets[1].spines["right"].set_color(self.primary_fg)
         self.graph_widgets[1].tick_params(color=self.primary_fg, labelcolor=self.primary_fg)
 
-    def fill_details_labels(self, timestamp):
-        timestamp_data = [timestamp.get_date(), timestamp.get_time(), timestamp.get_x_acc(),
-                          timestamp.get_y_acc(), timestamp.get_z_acc(), timestamp.get_svm()]
+    def fill_details_labels(self, max_timestamp):
+        """
+        This method fills the details labels with the data of the maximum SVM timestamp.
+
+        :param max_timestamp: Timestamp object with the maximum SVM value.
+        """
+        timestamp_data = [max_timestamp.get_date(), max_timestamp.get_time(),
+                          max_timestamp.get_x_acc(), max_timestamp.get_y_acc(),
+                          max_timestamp.get_z_acc(), max_timestamp.get_svm()]
         for i, label in enumerate(self.details_widgets):
             if isinstance(label, ttk.Label):
                 label_text = label.cget("text")
                 self.details_widgets[i].configure(text=f"{label_text}  =  {str(timestamp_data[i])}")
 
-    def fill_details_tree_view(self, timestamps):
+    def fill_details_tree_view(self, timestamps: List):
+        """
+        This method fills the details treeview with the data of the incidents timestamps.
+
+        :param timestamps: List of Timestamp objects.
+        """
         for timestamp in timestamps:
             self.details_widgets[6].insert("", 0, tags=str(timestamp.get_timestamp_id() % 2),
                                            values=(timestamp.get_time(), timestamp.get_x_acc(),
                                                    timestamp.get_y_acc(), timestamp.get_z_acc(),
                                                    timestamp.get_svm()))
 
-    def select_graph(self, selected_graph):
+    def select_graph(self, selected_graph: str):
+        """
+        This method clears the graph figure and passes the selected graph to fill_graph() of
+        IncidentController.
+
+        :param selected_graph: Name of selected graph.
+        """
         self.graph_widgets[1].clear()
         self.controller.fill_graph(selected_graph)
 
-    def plot_graph(self, time, data, color):
-        self.graph_widgets[1].plot(time, data, color=color, marker=".")
+    def plot_graph(self, time_data: List[float], acc_data: List[float], color: str):
+        """
+        This method plots a colored graph using the timestamps time-data and acceleration-data.
 
-    def set_graph(self, time, selected_graph):
-        self.graph_widgets[1].set(title=selected_graph, xlabel="Time (s)", xlim=(time[0], time[-1]))
+        :param time_data: Timestamps time-data for X-axis.
+        :param acc_data: Timestamps acceleration-data for Y-axis.
+        :param color: Color of graph.
+        """
+        self.graph_widgets[1].plot(time_data, acc_data, color=color, marker=".")
+
+    def set_graph(self, time_data: List[float], selected_graph: str):
+        """
+        This method sets the title, labels, and legend of the graph depending on the name of the
+        selected graph. It also sets the X-axis limit using the timestamps time-data.
+
+        :param time_data: Timestamps time-data for X-axis.
+        :param selected_graph: Name of selected graph.
+        """
+        self.graph_widgets[1].set(title=selected_graph, xlabel="Time (s)",
+                                  xlim=(time_data[0], time_data[-1]))
         self.graph_widgets[1].title.set_color(self.primary_fg)
         self.graph_widgets[1].grid(color=self.primary_bg)
         if selected_graph == self.texts[0]:
@@ -165,13 +218,28 @@ class IncidentView(AbstractView, tk.Toplevel):
             self.graph_widgets[1].set(ylabel="Acceleration (m/s$^2$)")
         self.graph_widgets[0].canvas.draw()
 
-    def export_graph(self, graph_path):
+    def export_graph(self, graph_path: str):
+        """
+        This method exports the graph figure to the passed graph path.
+
+        :param graph_path: Name of the graph path.
+        """
         self.graph_widgets[0].savefig(graph_path)
 
-    def get_graph_colors(self):
+    def get_graph_colors(self) -> Tuple:
+        """
+        This method gets the views graph colors.
+
+        :returns: Tuple of the views graph colors.
+        """
         return self.primary_fg, self.secondary_fg, self.tertiary_fg
 
     def stop_tree_view_resize(self, event):
+        """
+        This method stops the resizing of columns for the details tree view.
+
+        :param event: Event to be stopped.
+        """
         if self.details_widgets[6].identify_region(event.x, event.y) == "separator":
             return "break"
         return "continue"
@@ -181,6 +249,7 @@ class IncidentView(AbstractView, tk.Toplevel):
         self.load_header()
         self.load_details()
         self.load_graph()
+        self.load_graph_style()
         self.load_actions()
         self.open(self)
         self.mainloop()

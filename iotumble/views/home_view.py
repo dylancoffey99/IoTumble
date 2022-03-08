@@ -1,3 +1,4 @@
+"""This module contains the HomeView class, to represent a home view of the program."""
 import tkinter as tk
 from tkinter import ttk
 
@@ -7,7 +8,15 @@ from iotumble.views.abstract_view import AbstractView
 
 
 class HomeView(AbstractView, tk.Tk):
+    """
+    This class represents a home view of the program, implementing AbstractView and tk.Tk. It
+    contains a constructor, a method for loading the programs styling, the methods for loading its
+    icon and widgets, the methods for interacting with its widgets and controller, and the
+    implemented abstract methods.
+    """
+
     def __init__(self, controller):
+        """This constructor instantiates a HomeView object."""
         super().__init__()
         self.withdraw()
         self.controller = controller
@@ -24,6 +33,7 @@ class HomeView(AbstractView, tk.Tk):
         self.frame.pack(expand=True, fill="both")
 
     def load_icon(self):
+        """This method loads the programs toolbar icon."""
         self.icon.attributes("-alpha", 0.0)
         self.icon.title("IoTumble")
         self.icon.iconbitmap("logo.ico")
@@ -31,6 +41,10 @@ class HomeView(AbstractView, tk.Tk):
         self.icon.protocol("WM_DELETE_WINDOW", lambda: self.close(self))
 
     def load_style(self):
+        """
+        This method loads the programs widget styling, such as its colors, fonts, and
+        configurations.
+        """
         style = ttk.Style()
         style.theme_create("iotumble", parent="default", settings={
             "TButton": {
@@ -123,6 +137,10 @@ class HomeView(AbstractView, tk.Tk):
         header_logo_label.bind("<B1-Motion>", lambda e: self.move_window(self, e))
 
     def load_incidents(self):
+        """
+        This method loads the incidents section and its widgets, such as its frame, label, treeview,
+        and scrollbar.
+        """
         incidents_frame = tk.Frame(self.frame, background=self.secondary_bg)
         incidents_frame.pack(expand=True, fill="both", side="left")
         incidents_title_label = ttk.Label(incidents_frame, style="tertiary.TLabel",
@@ -143,6 +161,10 @@ class HomeView(AbstractView, tk.Tk):
         self.incidents_tree_view.bind("<<TreeviewSelect>>", lambda e: self.switch())
 
     def load_session(self):
+        """
+        This method loads the session section and its widgets, such as its frame, labels, entries,
+        combobox, and buttons.
+        """
         session_frame = tk.Frame(self.frame, background=self.secondary_bg)
         session_frame.pack(expand=True, fill="both", side="top", ipadx=47)
         session_title_label = ttk.Label(session_frame, style="tertiary.TLabel", text="Session")
@@ -177,7 +199,12 @@ class HomeView(AbstractView, tk.Tk):
         session_quit_button.pack(expand=True, fill="both", side="left", pady=(46, 0),
                                  ipadx=17, ipady=30)
 
-    def show_message(self, message_text):
+    def show_message(self, message_text: str):
+        """
+        This method shows a pop-up for displaying a message.
+
+        :param message_text: Text of the message pop-up.
+        """
         message = tk.Toplevel()
         message.overrideredirect(True)
         message.attributes("-topmost", True)
@@ -196,39 +223,74 @@ class HomeView(AbstractView, tk.Tk):
         message_button.pack(expand=True, fill="both")
         self.set_geometry(message, 300, 300)
 
-    def connect(self, session_frame):
+    def connect(self, session_frame: tk.Frame):
+        """
+        This method passes the session inputs to connect() from HomeController, and if it returns
+        True, it covers the session section with a disconnect button.
+
+        :param session_frame: Frame of the session section.
+        """
         if self.controller.connect(self.inputs["access"].get(), self.inputs["secret"].get(),
                                    self.inputs["region"].get()):
             disconnect_button = ttk.Button(session_frame, takefocus=False, text="Disconnect",
                                            command=lambda: self.disconnect(disconnect_button))
             disconnect_button.place(height=460, width=293, y=22)
 
-    def disconnect(self, disconnect_button):
+    def disconnect(self, disconnect_button: ttk.Button):
+        """
+        This method calls disconnect() from HomeController, clears the incidents treeview, and
+        destroys the disconnect button.
+
+        :param disconnect_button: Disconnect button to be destroyed.
+        """
         self.controller.disconnect()
         self.clear_tree_view()
         disconnect_button.destroy()
 
-    def fill_inputs(self, access_key_id, secret_access_key, region_name):
+    def fill_inputs(self, access_key_id: str, secret_access_key: str, region_name: str):
+        """
+        This method fills the inputs of the session section with its passed parameters.
+
+        :param access_key_id: Access Key ID of the Session.
+        :param secret_access_key: Secret Access Key of the Session.
+        :param region_name: Region Name of the Session.
+        """
         self.inputs["access"].set(access_key_id)
         self.inputs["secret"].set(secret_access_key)
         self.inputs["region"].set(region_name)
 
-    def fill_incidents(self, incident_count):
+    def fill_incidents(self, incident_count: int):
+        """
+        This method fills the incidents treeview with a certain amount of items.
+
+        :param incident_count: Count of incident items.
+        """
         for i in range(incident_count):
             i += 1
             self.incidents_tree_view.insert("", 0, tags=str(i % 2), text="Incident " + str(i))
 
-    def highlight_tree_view(self, highlighted, event):
+    def highlight_tree_view(self, highlighted: bool, event):
+        """
+        This method highlights a row in the incidents treeview if its being hovered over.
+
+        :param highlighted: Boolean on if a row is highlighted.
+        :param event: Event calling this method.
+        """
         row = self.incidents_tree_view.identify_row(event.y)
         self.tk.call(self.incidents_tree_view, "tag", "remove", "highlight")
         if highlighted:
             self.tk.call(self.incidents_tree_view, "tag", "add", "highlight", row)
 
     def clear_tree_view(self):
+        """This method clears all items from the incidents treeview."""
         for item in self.incidents_tree_view.get_children():
             self.incidents_tree_view.delete(item)
 
     def switch(self):
+        """
+        This method gets the selected item and its incident ID from the incidents treeview, and
+        passes it to switch() in HomeController.
+        """
         selected = self.incidents_tree_view.selection()[0]
         if selected != "":
             selected_text = self.incidents_tree_view.item(selected, "text")
@@ -236,6 +298,7 @@ class HomeView(AbstractView, tk.Tk):
             self.controller.switch(incident_id)
 
     def hide(self):
+        """This method hides the view and unbinds its icon."""
         self.icon.unbind("<Map>")
         self.icon.unbind("<Unmap>")
         self.withdraw()

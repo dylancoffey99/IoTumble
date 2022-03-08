@@ -26,39 +26,39 @@ class IncidentController(AbstractController):
 
     def fill_details(self):
         """
-        This method gets the incidents timestamps and max SVM timestamp and uses them to fill the
-        details section of IncidentView.
+        This method gets the incidents timestamps and maximum SVM timestamp and uses them to fill
+        the details section of IncidentView.
         """
-        timestamp = self.incident.get_max_timestamp()
+        max_timestamp = self.incident.get_max_timestamp()
         timestamps = self.incident.get_timestamps()
-        self.incident_view.fill_details_labels(timestamp)
+        self.incident_view.fill_details_labels(max_timestamp)
         self.incident_view.fill_details_tree_view(timestamps)
 
     def fill_graph(self, selected_graph: str):
         """
-        This method gets the data of the incidents timestamps, depending on the passed selected
-        graph. It then fills the graph section of IncidentView.
+        This method gets the acceleration data of the incidents timestamps, depending on the passed
+        selected graph. It then fills the graph section of IncidentView.
 
-        :param selected_graph: Selected graph of IncidentView.
+        :param selected_graph: Name of the selected graph.
         """
-        time = self.incident.get_timestamps_time()
-        colors = self.incident_view.get_graph_colors()
+        time_data = self.incident.get_timestamps_time()
+        graph_colors = self.incident_view.get_graph_colors()
         if selected_graph == "All Acceleration":
             timestamps_data = [self.incident.get_timestamps_x(), self.incident.get_timestamps_y(),
                                self.incident.get_timestamps_z()]
-            for i, data in enumerate(timestamps_data):
-                self.incident_view.plot_graph(time, data, colors[i])
+            for i, acc_data in enumerate(timestamps_data):
+                self.incident_view.plot_graph(time_data, acc_data, graph_colors[i])
         else:
             if selected_graph == "X-Acceleration":
-                data = self.incident.get_timestamps_x()
+                acc_data = self.incident.get_timestamps_x()
             elif selected_graph == "Y-Acceleration":
-                data = self.incident.get_timestamps_y()
+                acc_data = self.incident.get_timestamps_y()
             elif selected_graph == "Z-Acceleration":
-                data = self.incident.get_timestamps_z()
+                acc_data = self.incident.get_timestamps_z()
             else:
-                data = self.incident.get_timestamps_svm()
-            self.incident_view.plot_graph(time, data, colors[2])
-        self.incident_view.set_graph(time, selected_graph)
+                acc_data = self.incident.get_timestamps_svm()
+            self.incident_view.plot_graph(time_data, acc_data, graph_colors[2])
+        self.incident_view.set_graph(time_data, selected_graph)
 
     def export_csv(self):
         """This method exports the incident timestamps as a CSV file to an exports directory."""
@@ -75,7 +75,7 @@ class IncidentController(AbstractController):
         This method exports the selected graph in IncidentView as a PNG file to an exports
         directory.
 
-        :param selected_graph: Selected graph of IncidentView.
+        :param selected_graph: Name of the selected graph.
         """
         if selected_graph == "":
             self.home_view.show_message("Please select a graph to export!")
@@ -89,7 +89,7 @@ class IncidentController(AbstractController):
             self.home_view.show_message(f"Successfully exported graph:\n'{file_path}.png'.")
 
     def back(self):
-        """This method closes IncidentView and re-opens HomeView."""
+        """This method closes IncidentView and un-hides HomeView."""
         self.incident_view.close(self.incident_view)
         self.home_view.open(self.home_view)
 

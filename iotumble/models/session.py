@@ -79,7 +79,7 @@ class Session:
         This method requests the count of incident items from the created DynamoDB resource, creates
         a count value from its response, and returns it.
 
-        :returns: Current count of incident items.
+        :returns: Count of incident items.
         """
         try:
             response = self.incidents_table.get_item(Key={"pk": 0, "sk": "count"})
