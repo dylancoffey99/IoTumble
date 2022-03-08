@@ -1,8 +1,8 @@
-from iotumble import IoTumble
+from device import Device
 
 if __name__ == "__main__":
-    iotumble = IoTumble()
-    iotumble.connect()
+    device = Device()
+    device.connect()
 
     while True:
-        iotumble.read_accelerometer()
+        device.read_accelerometer()

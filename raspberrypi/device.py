@@ -10,11 +10,12 @@ from boto3 import client
 from botocore.exceptions import ClientError
 
 
-class IoTumble:
+class Device:
     def __init__(self):
         self.accelerometer = ADXL345(I2C())
         self.client = None
         self.mqtt_client = None
+        self.incident_flag = False
         self.timestamps = []
 
     def connect(self):
@@ -38,24 +39,9 @@ class IoTumble:
         self.mqtt_client.configureMQTTOperationTimeout(5)
 
     def mqtt_publish(self):
-        topic = f"iotumble/incident/{self.increment_incident_count()}"
+        topic = f"iotumble/incident/{self.request_incident_count() + 1}"
         payload = self.create_payload()
         self.mqtt_client.publish(topic, payload, 1)
-
-    def read_accelerometer(self):
-        acceleration = self.accelerometer.acceleration
-        x_acc = acceleration[0]
-        y_acc = acceleration[1]
-        z_acc = acceleration[2]
-        svm = sqrt((x_acc * x_acc) + (y_acc * y_acc) + (z_acc * z_acc))
-        epoch = time()
-        timestamp = {"x": x_acc, "y": y_acc, "z": z_acc, "svm": svm, "ep": epoch}
-        self.record_timestamp(timestamp)
-
-    def record_timestamp(self, timestamp):
-        self.timestamps.append(timestamp)
-        if len(self.timestamps) > 31:
-            del self.timestamps[-1]
 
     def create_payload(self):
         payload = "{"
@@ -67,7 +53,7 @@ class IoTumble:
                 payload += payload_timestamp + "}"
         return payload.replace("'", '"')
 
-    def increment_incident_count(self):
+    def request_incident_count(self):
         try:
             response = self.client.get_item(TableName="iotumble_incidents",
                                             Key={"pk": {"N": "0"}, "sk": {"S": "count"}})
@@ -75,7 +61,42 @@ class IoTumble:
         except ClientError as err:
             raise err
         else:
-            return int(count) + 1
+            return int(count)
+
+    def read_accelerometer(self):
+        timestamp = self.create_timestamp()
+        self.record_timestamp(timestamp)
+        if not self.incident_flag:
+            self.check_timestamp(timestamp)
+
+    def create_timestamp(self):
+        x_acc, y_acc, z_acc = self.accelerometer.acceleration
+        svm = sqrt((x_acc * x_acc) + (y_acc * y_acc) + (z_acc * z_acc))
+        timestamp = {"x": x_acc, "y": y_acc, "z": z_acc, "svm": svm, "ep": time()}
+        return timestamp
+
+    def record_timestamp(self, timestamp):
+        self.timestamps.append(timestamp)
+        if len(self.timestamps) > 31:
+            self.timestamps.pop()
+
+    def check_timestamp(self, timestamp):
+        svm = timestamp.get("svm")
+        if svm > 25 and svm >= self.timestamps[1].get("svm"):
+            x_acc = timestamp.get("x")
+            if x_acc < 0 and x_acc <= self.timestamps[1].get("x"):
+                y_acc = timestamp.get("y")
+                if y_acc < -15 and y_acc <= self.timestamps[1].get("y"):
+                    z_acc = timestamp.get("z")
+                    if z_acc > 10 and z_acc >= self.timestamps[1].get("z"):
+                        self.incident_detected()
+
+    def incident_detected(self):
+        self.incident_flag = True
+        for _ in range(int(len(self.timestamps) / 2)):
+            self.read_accelerometer()
+        self.incident_flag = False
+        self.mqtt_publish()
 
     @staticmethod
     def read_credentials():
