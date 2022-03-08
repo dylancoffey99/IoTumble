@@ -16,6 +16,9 @@ class IncidentController(AbstractController):
         """
         This constructor instantiates a IncidentController object and loads an instance of
         IncidentView.
+
+        :param home_view: Instance of HomeView.
+        :param incident: Instance of an Incident object.
         """
         self.home_view = home_view
         self.incident = incident

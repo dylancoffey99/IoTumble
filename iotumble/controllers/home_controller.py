@@ -24,8 +24,8 @@ class HomeController(AbstractController):
 
     def connect(self, access_key_id: str, secret_access_key: str, region_name: str) -> bool:
         """
-        This method connects the Session object, and creates an Amazon DynamoDB table resource in
-        Session. Lastly, fill_incidents() is called and it returns its outcome.
+        This method connects the Session object to AWS, and creates an Amazon DynamoDB table
+        resource in Session. Lastly, fill_incidents() is called and it returns its outcome.
 
         :param access_key_id: Access Key ID of the Session.
         :param secret_access_key: Secret Access Key of the Session.
@@ -40,7 +40,7 @@ class HomeController(AbstractController):
         return self.fill_incidents()
 
     def disconnect(self):
-        """This method disconnects the Session object."""
+        """This method disconnects the Session object from AWS."""
         self.session.disconnect()
 
     def create_credentials(self):
