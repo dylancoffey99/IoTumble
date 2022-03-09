@@ -1,7 +1,7 @@
 from configparser import ConfigParser
 from math import sqrt
 from os import path
-from time import time
+from time import sleep, time
 
 from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient
 from adafruit_adxl34x import ADXL345
@@ -15,7 +15,7 @@ class Device:
         self.accelerometer = ADXL345(I2C())
         self.client = None
         self.mqtt_client = None
-        self.incident_flag = False
+        self.threshold_flag = False
         self.timestamps = []
 
     def connect(self):
@@ -64,10 +64,11 @@ class Device:
             return int(count)
 
     def read_accelerometer(self):
+        sleep(0.1)
         timestamp = self.create_timestamp()
         self.record_timestamp(timestamp)
-        if not self.incident_flag:
-            self.check_timestamp(timestamp)
+        if not self.threshold_flag:
+            self.check_thresholds(timestamp)
 
     def create_timestamp(self):
         x_acc, y_acc, z_acc = self.accelerometer.acceleration
@@ -77,26 +78,43 @@ class Device:
 
     def record_timestamp(self, timestamp):
         self.timestamps.append(timestamp)
-        if len(self.timestamps) > 31:
-            self.timestamps.pop()
+        if len(self.timestamps) > 51:
+            self.timestamps.pop(0)
 
-    def check_timestamp(self, timestamp):
-        svm = timestamp.get("svm")
-        if svm > 25 and svm >= self.timestamps[1].get("svm"):
-            x_acc = timestamp.get("x")
-            if x_acc < 0 and x_acc <= self.timestamps[1].get("x"):
-                y_acc = timestamp.get("y")
-                if y_acc < -15 and y_acc <= self.timestamps[1].get("y"):
-                    z_acc = timestamp.get("z")
-                    if z_acc > 10 and z_acc >= self.timestamps[1].get("z"):
-                        self.incident_detected()
+    def check_thresholds(self, timestamp):
+        svm = abs(timestamp.get("svm"))
+        if svm > 20:
+            for key in ("x", "y", "z"):
+                data = abs(timestamp.get(key))
+                if data > 18:
+                    self.threshold_reached()
+                    break
 
-    def incident_detected(self):
-        self.incident_flag = True
-        for _ in range(int(len(self.timestamps) / 2)):
+    def threshold_reached(self):
+        self.threshold_flag = True
+        post_threshold_length = int(len(self.timestamps) / 2)
+        for _ in range(post_threshold_length):
             self.read_accelerometer()
-        self.incident_flag = False
+        self.check_inactivity(int(post_threshold_length / 2))
+        self.threshold_flag = False
+
+    def check_inactivity(self, post_threshold_length):
+        post_threshold = self.get_post_threshold(post_threshold_length)
+        for data_list in post_threshold.values():
+            average = sum(data_list) / post_threshold_length
+            for data in data_list:
+                comparison = data - average
+                if -1 <= comparison <= 1:
+                    continue
+                return
         self.mqtt_publish()
+
+    def get_post_threshold(self, post_threshold_length):
+        post_threshold = {"x": [], "y": [], "z": [], "svm": []}
+        for timestamp in self.timestamps[-post_threshold_length:]:
+            for key, value in post_threshold.items():
+                value.append(abs(timestamp.get(key)))
+        return post_threshold
 
     @staticmethod
     def read_credentials():
