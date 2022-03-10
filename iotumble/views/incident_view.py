@@ -158,8 +158,8 @@ class IncidentView(AbstractView, tk.Toplevel):
         :param max_timestamp: Timestamp object with the maximum SVM value.
         """
         timestamp_data = [max_timestamp.get_date(), max_timestamp.get_time(),
-                          max_timestamp.get_x_acc(), max_timestamp.get_y_acc(),
-                          max_timestamp.get_z_acc(), max_timestamp.get_svm()]
+                          round(max_timestamp.get_x_acc(), 8), round(max_timestamp.get_y_acc(), 8),
+                          round(max_timestamp.get_z_acc(), 8), round(max_timestamp.get_svm(), 10)]
         for i, label in enumerate(self.details_widgets):
             if isinstance(label, ttk.Label):
                 label_text = label.cget("text")
@@ -173,9 +173,11 @@ class IncidentView(AbstractView, tk.Toplevel):
         """
         for timestamp in timestamps:
             self.details_widgets[6].insert("", 0, tags=str(timestamp.get_timestamp_id() % 2),
-                                           values=(timestamp.get_time(), timestamp.get_x_acc(),
-                                                   timestamp.get_y_acc(), timestamp.get_z_acc(),
-                                                   timestamp.get_svm()))
+                                           values=(timestamp.get_time(),
+                                                   round(timestamp.get_x_acc(), 8),
+                                                   round(timestamp.get_y_acc(), 8),
+                                                   round(timestamp.get_z_acc(), 8),
+                                                   round(timestamp.get_svm(), 10)))
 
     def select_graph(self, selected_graph: str):
         """
