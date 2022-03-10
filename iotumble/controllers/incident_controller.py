@@ -1,3 +1,8 @@
+# Author: Dylan Coffey (18251382)
+# Project: IoTumble (Final Year Project)
+# Course: Cyber Security and IT Forensics
+# University: University of Limerick (Ireland)
+
 """
 This module contains the IncidentController class, containing the functionality to allow
 IncidentView to interface with the model classes.

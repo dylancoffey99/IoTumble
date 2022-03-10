@@ -1,3 +1,8 @@
+# Author: Dylan Coffey (18251382)
+# Project: IoTumble (Final Year Project)
+# Course: Cyber Security and IT Forensics
+# University: University of Limerick (Ireland)
+
 """
 This module contains the abstract class AbstractView, containing the methods and variables that are
 shared between HomeView and IncidentView.

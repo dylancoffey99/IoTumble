@@ -1,3 +1,8 @@
+# Author: Dylan Coffey (18251382)
+# Project: IoTumble (Final Year Project)
+# Course: Cyber Security and IT Forensics
+# University: University of Limerick (Ireland)
+
 """
 This module contains the abstract class AbstractController, containing the methods that are shared
 between HomeController and IncidentController.
